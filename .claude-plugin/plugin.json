@@ -1,8 +1,14 @@
 {
   "name": "tuanzii",
   "description": "tuanzii Claude Code Marketplace plugin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "hao.yang"
+  },
+  "userConfig": {
+    "notify_enabled": {
+      "description": "任务完成时是否发送系统通知（true/false）",
+      "sensitive": false
+    }
   }
 }
