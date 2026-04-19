@@ -2,14 +2,16 @@
 
 ## 概述
 
-当 Claude Code 停止响应时，通过 Windows 系统通知提醒用户任务已完成，通知内容包含 Claude 最后回复的动态摘要。用户可通过插件配置开关控制是否启用通知。
+当 Claude Code 停止响应时，通过系统通知提醒用户任务已完成，通知内容包含 Claude 最后回复的动态摘要。用户可通过插件配置开关控制是否启用通知。兼容 Windows 和 macOS。
 
 ## 方案选择
 
 **Node.js + node-notifier**（已选定）
 
-- 使用 `node-notifier` 发送跨平台系统通知
+- 使用 `node-notifier` 发送跨平台系统通知（Windows / macOS）
 - 无需系统级依赖，npm install 即可
+- Windows：使用 Windows Toast 通知
+- macOS：使用 `terminal-notifier`（推荐）或原生 `osascript` 作为 fallback
 - 通知样式支持标题、正文、图标
 
 ## 架构
@@ -23,7 +25,7 @@ scripts/notify.js ← stdin: { last_assistant_message, ... }
     ↓
 检查 userConfig 开关（环境变量）
     ↓ 已启用
-node-notifier → Windows 系统通知
+node-notifier → 系统通知（Windows / macOS）
 ```
 
 ## 文件清单
@@ -64,6 +66,9 @@ node-notifier → Windows 系统通知
 - 截取前 100 字符作为通知正文
 - 空消息时显示「Claude 任务已完成」
 - 使用 `node-notifier` 发送系统通知，标题「tuanzii」，正文为摘要
+- node-notifier 会自动根据操作系统选择通知方式：
+  - Windows：Windows Toast / Balloon
+  - macOS：`terminal-notifier`（如果已安装）或 `osascript`（系统自带）
 
 ### 3. .claude-plugin/plugin.json
 
@@ -94,5 +99,6 @@ node-notifier → Windows 系统通知
 ## 错误处理
 
 - node-notifier 不可用时静默失败（exit 0），不阻塞 Claude
+- macOS 未安装 terminal-notifier 时，node-notifier 自动 fallback 到 osascript
 - JSON 解析失败时使用默认消息
 - stdin 为空时使用默认消息
