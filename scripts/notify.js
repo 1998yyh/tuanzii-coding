@@ -2,6 +2,9 @@
 
 const notifier = require('node-notifier');
 
+// 5 seconds timeout to prevent blocking Claude exit
+setTimeout(() => process.exit(0), 5000);
+
 // 读取 stdin JSON
 let input = '';
 
@@ -11,8 +14,8 @@ process.stdin.on('data', (chunk) => {
 
 process.stdin.on('end', () => {
   try {
-    // 检查开关：Claude Code 将 userConfig 注入为环境变量 TUAZII_NOTIFY_ENABLED
-    const enabled = process.env.TUAZII_NOTIFY_ENABLED;
+    // 检查开关：Claude Code 将 userConfig 注入为环境变量 TUANZII_NOTIFY_ENABLED
+    const enabled = process.env.TUANZII_NOTIFY_ENABLED;
     if (enabled === 'false' || enabled === '0') {
       process.exit(0);
     }

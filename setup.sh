@@ -80,18 +80,20 @@ if [ ! -f "$SETTINGS_FILE" ]; then
   warn "settings.json 不存在，已创建空文件"
 fi
 
-node -e "
+SETTINGS_PATH="$SETTINGS_FILE" MARKETPLACE="$MARKETPLACE_NAME" PROJ_DIR="$PROJECT_DIR" node -e "
 const fs = require('fs');
-const settingsPath = '$SETTINGS_FILE';
+const settingsPath = process.env.SETTINGS_PATH;
+const marketplace = process.env.MARKETPLACE;
+const projDir = process.env.PROJ_DIR;
 const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
 
 if (!settings.extraKnownMarketplaces) {
   settings.extraKnownMarketplaces = {};
 }
-settings.extraKnownMarketplaces['$MARKETPLACE_NAME'] = {
+settings.extraKnownMarketplaces[marketplace] = {
   source: {
     source: 'directory',
-    path: '$PROJECT_DIR'
+    path: projDir
   }
 };
 
@@ -105,17 +107,20 @@ if [ ! -f "$KNOWN_MARKETPLACES_FILE" ]; then
   warn "known_marketplaces.json 不存在，已创建空文件"
 fi
 
-node -e "
+KNOWN_FILE="$KNOWN_MARKETPLACES_FILE" MARKETPLACE="$MARKETPLACE_NAME" PROJ_DIR="$PROJECT_DIR" SYMLINK="$SYMLINK_PATH" node -e "
 const fs = require('fs');
-const filePath = '$KNOWN_MARKETPLACES_FILE';
+const filePath = process.env.KNOWN_FILE;
+const marketplace = process.env.MARKETPLACE;
+const projDir = process.env.PROJ_DIR;
+const symlink = process.env.SYMLINK;
 const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
-data['$MARKETPLACE_NAME'] = {
+data[marketplace] = {
   source: {
     source: 'directory',
-    path: '$PROJECT_DIR'
+    path: projDir
   },
-  installLocation: '$SYMLINK_PATH',
+  installLocation: symlink,
   lastUpdated: new Date().toISOString()
 };
 

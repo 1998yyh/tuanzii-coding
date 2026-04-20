@@ -121,7 +121,7 @@ $known | Add-Member -NotePropertyName $MARKETPLACE_NAME -NotePropertyValue @{
         path   = $PROJECT_DIR
     }
     installLocation = $SYMLINK_PATH
-    lastUpdated     = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    lastUpdated     = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 } -Force
 
 $known | ConvertTo-Json -Depth 10 | Set-Content $KNOWN_MARKETPLACES_FILE -Encoding UTF8
