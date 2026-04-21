@@ -156,6 +156,40 @@ else
   info "已创建缓存符号链接：$CACHE_VERSION_PATH → $PROJECT_DIR"
 fi
 
+# ── 第 5 步：安装输出风格到 ~/.claude/output-styles/ ─────────────────────────
+OUTPUT_STYLES_SRC="$PROJECT_DIR/output-styles"
+OUTPUT_STYLES_DST="$CLAUDE_DIR/output-styles"
+
+if [ -d "$OUTPUT_STYLES_SRC" ]; then
+  mkdir -p "$OUTPUT_STYLES_DST"
+  STYLE_COUNT=0
+
+  for style_file in "$OUTPUT_STYLES_SRC"/*.md; do
+    [ -f "$style_file" ] || continue
+    filename="$(basename "$style_file")"
+    dst_path="$OUTPUT_STYLES_DST/$filename"
+
+    if [ -L "$dst_path" ]; then
+      existing="$(readlink "$dst_path")"
+      if [ "$existing" = "$style_file" ]; then
+        STYLE_COUNT=$((STYLE_COUNT + 1))
+        continue
+      else
+        rm -f "$dst_path"
+      fi
+    elif [ -f "$dst_path" ]; then
+      rm -f "$dst_path"
+    fi
+
+    ln -s "$style_file" "$dst_path"
+    STYLE_COUNT=$((STYLE_COUNT + 1))
+  done
+
+  info "已安装 $STYLE_COUNT 个输出风格到 $OUTPUT_STYLES_DST（符号链接）"
+else
+  warn "未找到 output-styles 目录，跳过输出风格安装"
+fi
+
 # ── 完成 ──────────────────────────────────────────────────────────────────────
 echo ""
 echo "══════════════════════════════════════════════════"
@@ -167,6 +201,9 @@ echo "  1. 重启 Claude Code"
 echo "  2. 输入 /plugins"
 echo "  3. 找到 $PLUGIN_NAME 并安装"
 echo ""
-echo "  提示：缓存已通过符号链接指向源目录，"
-echo "  后续新增/修改 skill 无需重新安装插件。"
+echo "  提示："
+echo "  • 缓存已通过符号链接指向源目录，"
+echo "    后续新增/修改 skill 无需重新安装插件。"
+echo "  • 输出风格已链接到 ~/.claude/output-styles/，"
+echo "    可通过 /output-style 命令切换风格。"
 echo ""

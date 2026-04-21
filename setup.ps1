@@ -158,6 +158,41 @@ if (Is-Symlink $cacheVersionPath) {
     Info "created cache symlink: $cacheVersionPath -> $PROJECT_DIR"
 }
 
+# ── 第 5 步：安装输出风格到 ~/.claude/output-styles/ ─────────────────────────
+$OUTPUT_STYLES_SRC = Join-Path $PROJECT_DIR "output-styles"
+$OUTPUT_STYLES_DST = Join-Path $CLAUDE_DIR "output-styles"
+
+if (Test-Path $OUTPUT_STYLES_SRC -PathType Container) {
+    if (-not (Test-Path $OUTPUT_STYLES_DST)) {
+        New-Item -ItemType Directory -Path $OUTPUT_STYLES_DST -Force | Out-Null
+    }
+    $styleCount = 0
+
+    Get-ChildItem -Path $OUTPUT_STYLES_SRC -Filter "*.md" | ForEach-Object {
+        $srcFile = $_.FullName
+        $dstFile = Join-Path $OUTPUT_STYLES_DST $_.Name
+
+        if (Is-Symlink $dstFile) {
+            $existingTarget = (Get-Item $dstFile).Target
+            if ($existingTarget -eq $srcFile) {
+                $script:styleCount++
+                return
+            } else {
+                Remove-Item -Force $dstFile
+            }
+        } elseif (Test-Path $dstFile -PathType Leaf) {
+            Remove-Item -Force $dstFile
+        }
+
+        Create-Symlink $srcFile $dstFile
+        $script:styleCount++
+    }
+
+    Info "installed $styleCount output styles to $OUTPUT_STYLES_DST (symlinks)"
+} else {
+    Warn "output-styles directory not found, skipping"
+}
+
 # ── 完成 ──────────────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "==================================================" -ForegroundColor Green
@@ -169,6 +204,9 @@ Write-Host "  1. Restart Claude Code"
 Write-Host "  2. Type /plugins"
 Write-Host "  3. Find $pluginName and install"
 Write-Host ""
-Write-Host "  Tip: cache is symlinked to source dir,"
-Write-Host "  adding/editing skills does not require reinstall."
+Write-Host "  Tips:"
+Write-Host "  - Cache is symlinked to source dir,"
+Write-Host "    adding/editing skills does not require reinstall."
+Write-Host "  - Output styles are linked to ~/.claude/output-styles/,"
+Write-Host "    switch styles via /output-style command."
 Write-Host ""
