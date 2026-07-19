@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# 【老王注】用途：定位并创建 SDD 临时工作目录（brief、report、评审包、进度账本都放这），打印绝对路径。
+# 【老王注】放工作区而不放 .git/：Claude Code 把 .git/ 列为保护路径，subagent 写不进去；自带全忽略 .gitignore，不进 git status。
+# 【老王注】用法：sdd-workspace（无参数）；它是 task-brief 和 review-package 的目录唯一来源，防漂移。
+# Resolve and ensure the working-tree directory SDD uses for its short-lived
+# artifacts: task briefs, implementer reports, review packages, and the
+# progress ledger. Print the directory's absolute path.
+#
+# The workspace lives in the working tree (not under .git/) because Claude Code
+# treats .git/ as a protected path and denies agent writes there — which blocks
+# an implementer subagent from writing its report file. A self-ignoring
+# .gitignore keeps the workspace out of `git status` and out of accidental
+# commits without modifying any tracked file.
+#
+# Single source of truth for the workspace location, so task-brief and
+# review-package cannot drift to different directories.
+#
+# Usage: sdd-workspace
+set -euo pipefail
+
+root=$(git rev-parse --show-toplevel)
+dir="$root/.superpowers/sdd"
+mkdir -p "$dir"
+# 【老王注】写入一个忽略全部的 .gitignore，让这个目录永远不进版本控制。
+printf '*\n' > "$dir/.gitignore"
+cd "$dir" && pwd

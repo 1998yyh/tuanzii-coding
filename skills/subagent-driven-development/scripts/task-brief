@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# 【老王注】用途：从实现计划里抽出某个 Task N 的完整原文写成文件，implementer 一次 Read 拿到需求，任务文本不经过 controller 上下文。
+# 【老王注】用法：task-brief PLAN_FILE TASK_NUMBER [OUTFILE]；默认输出 <repo>/.superpowers/sdd/task-<N>-brief.md。
+# 【老王注】找不到 Task N 标题时产出空文件并立即报错退出（exit 3），防止 implementer 拿空需求开工。
+# Extract one task's full text from an implementation plan into a file the
+# implementer reads in one call, so the task text never has to be pasted
+# through the controller's context.
+#
+# Usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]
+# Default OUTFILE: <repo-root>/.superpowers/sdd/task-<N>-brief.md
+# (per worktree; concurrent runs in the same working tree share it).
+set -euo pipefail
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "usage: task-brief PLAN_FILE TASK_NUMBER [OUTFILE]" >&2
+  exit 2
+fi
+
+plan=$1
+n=$2
+[ -f "$plan" ] || { echo "no such plan file: $plan" >&2; exit 2; }
+
+if [ $# -eq 3 ]; then
+  out=$3
+else
+  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
+  out="$dir/task-${n}-brief.md"
+fi
+
+# 【老王注】核心：awk 只在代码 fence 外匹配 "Task N" 标题；标题后必须是非数字或行尾，Task 10 不会被 Task 1 误中。
+awk -v n="$n" '
+  /^```/ { infence = !infence }
+  !infence && /^#+[ \t]+Task[ \t]+[0-9]+/ {
+    intask = ($0 ~ ("^#+[ \t]+Task[ \t]+" n "([^0-9]|$)"))
+  }
+  intask { print }
+' "$plan" > "$out"
+
+# 【老王注】空文件 = 没匹配到任务，报错退出而非静默成功。
+if [ ! -s "$out" ]; then
+  echo "task ${n} not found in ${plan} (no heading matching 'Task ${n}')" >&2
+  exit 3
+fi
+
+echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines"

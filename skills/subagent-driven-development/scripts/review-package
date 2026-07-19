@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# 【老王注】用途：生成评审包（commit 列表 + 变更统计 + 带 U10 上下文的完整 diff）写进一个文件，reviewer 一次 Read 读完，内容不进 controller 上下文。
+# 【老王注】用法：review-package BASE HEAD [OUTFILE]；BASE 必须是派 implementer 前记录的提交，别用 HEAD~1（多 commit 任务会被截断）。
+# 【老王注】输出：默认 <repo>/.superpowers/sdd/review-<base7>..<head7>.diff，按区间命名，修复后复审自然拿到新文件；stdout 打印文件路径。
+# Generate a review package: commit list, stat summary, and the net
+# diff with extended context, written to a file the reviewer reads in one
+# call. Using the recorded per-task BASE (not HEAD~1) keeps multi-commit
+# tasks intact.
+#
+# Usage: review-package BASE HEAD [OUTFILE]
+# Default OUTFILE: <repo-root>/.superpowers/sdd/review-<base7>..<head7>.diff
+# (named per range, so a re-review after fixes gets a distinct fresh file).
+set -euo pipefail
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "usage: review-package BASE HEAD [OUTFILE]" >&2
+  exit 2
+fi
+
+base=$1
+head=$2
+
+git rev-parse --verify --quiet "$base" >/dev/null || { echo "bad BASE: $base" >&2; exit 2; }
+git rev-parse --verify --quiet "$head" >/dev/null || { echo "bad HEAD: $head" >&2; exit 2; }
+
+if [ $# -eq 3 ]; then
+  out=$3
+else
+  # 【老王注】目录统一由 sdd-workspace 给出，三个脚本不会各写各的。
+  dir=$("$(cd "$(dirname "$0")" && pwd)/sdd-workspace")
+  out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+fi
+
+# 【老王注】核心：三段内容（log / stat / 完整 diff）一次重定向进同一个文件。
+{
+  echo "# Review package: ${base}..${head}"
+  echo
+  echo "## Commits"
+  git log --oneline "${base}..${head}"
+  echo
+  echo "## Files changed"
+  git diff --stat "${base}..${head}"
+  echo
+  echo "## Diff"
+  git diff -U10 "${base}..${head}"
+} > "$out"
+
+commits=$(git rev-list --count "${base}..${head}")
+echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"
