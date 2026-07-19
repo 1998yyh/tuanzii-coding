@@ -1,12 +1,14 @@
 {
   "name": "tuanzii",
   "description": "tuanzii Claude Code Marketplace plugin",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": {
     "name": "hao.yang"
   },
   "userConfig": {
     "notify_enabled": {
+      "type": "boolean",
+      "title": "任务完成通知",
       "description": "任务完成时是否发送系统通知（true/false）",
       "sensitive": false
     }
