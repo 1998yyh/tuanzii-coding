@@ -1,0 +1,17 @@
+{
+  "name": "tuanzii",
+  "owner": {
+    "name": "hao.yang"
+  },
+  "metadata": {
+    "description": "tuanzii Claude Code Marketplace plugin",
+    "version": "1.2.1"
+  },
+  "plugins": [
+    {
+      "name": "tuanzii",
+      "source": "./",
+      "description": "tuanzii: Git 工具、工程流程、写作辅助 skills + 输出风格 + 完成通知"
+    }
+  ]
+}
