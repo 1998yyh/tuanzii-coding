@@ -20,8 +20,5 @@
   "bugs": {
     "url": "https://github.com/1998yyh/tuanzii-coding/issues"
   },
-  "homepage": "https://github.com/1998yyh/tuanzii-coding#readme",
-  "dependencies": {
-    "node-notifier": "^10.0.1"
-  }
+  "homepage": "https://github.com/1998yyh/tuanzii-coding#readme"
 }
