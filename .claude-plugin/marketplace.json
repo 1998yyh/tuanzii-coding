@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "tuanzii Claude Code Marketplace plugin",
-    "version": "1.2.1"
+    "version": "3.0.0"
   },
   "plugins": [
     {
       "name": "tuanzii",
       "source": "./",
-      "description": "tuanzii: Git 工具、工程流程、写作辅助 skills + 输出风格 + 完成通知"
+      "description": "tuanzii: Git 工具、工程流程、写作辅助、追问与领域建模 skills + 输出风格"
     }
   ]
 }
