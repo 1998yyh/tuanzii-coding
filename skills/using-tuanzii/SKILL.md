@@ -45,6 +45,8 @@ Skills in this plugin are referenced as `tuanzii:<skill>` (e.g. `tuanzii:git-com
 | Skill | 什么时候用 |
 |-------|-----------|
 | `brainstorming` | 任何创造性工作之前：新功能、新组件、改行为——先聊清楚需求再动手 |
+| `grilling` | 用户想压力测试一个计划/决策/想法，或说出"拷问我"等触发词时 |
+| `domain-modeling` | 敲定领域术语、统一语言，或记录架构决策时；维护 `CONTEXT.md` 和 ADR |
 | `writing-plans` | 有设计/需求、任务跨多步、准备碰代码之前 |
 | `subagent-driven-development` | 执行包含多个独立任务的实施计划 |
 | `test-driven-development` | 写任何功能或修 bug，动手写实现代码之前 |
@@ -69,6 +71,13 @@ Skills in this plugin are referenced as `tuanzii:<skill>` (e.g. `tuanzii:git-com
 | Skill | 什么时候用 |
 |-------|-----------|
 | `humanizer-zh` | 编辑/审阅文本，要去除 AI 写作痕迹、让文字更像人写的 |
+
+### 用户手动触发（user-invoked，不在自动路由范围）
+
+| Skill | 什么时候用 |
+|-------|-----------|
+| `grill-me` | 用户输入 `/grill-me`：对计划或设计进行连环追问打磨 |
+| `grill-with-docs` | 用户输入 `/grill-with-docs`：连环追问 + 同步沉淀词汇表（`CONTEXT.md`）和 ADR |
 
 **清单维护：**新增、删除或重命名 `skills/*/SKILL.md` 时，同步更新本清单和 `CLAUDE.md` 中的技能索引。目录与每个技能的 frontmatter 是事实来源；清单只负责快速路由，不能替代实际加载。
 
