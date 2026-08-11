@@ -404,11 +404,12 @@ Done!
 
 ## Integration
 
-> 【老王注】配套链：worktrees 给隔离工作区，writing-plans 产计划，finishing-a-development-branch 收尾。
+> 【老王注】配套链：worktrees 给隔离工作区，finishing-a-development-branch 收尾；writing-plans 已移除，实施计划由主会话直接产出。
 **Required workflow skills:**
 - **tuanzii:using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
 - **tuanzii:writing-plans** - Creates the plan this skill executes
 - **tuanzii:finishing-a-development-branch** - Complete development after all tasks
+> 【老王注】tuanzii:writing-plans 已移除（模型原生能力）：执行计划由主会话直接产出，本 skill 只负责逐任务派发与评审。
 
 **Subagents should use:**
 - **tuanzii:test-driven-development** - Subagents follow TDD for each task

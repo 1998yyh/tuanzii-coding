@@ -47,7 +47,6 @@ Skills in this plugin are referenced as `tuanzii:<skill>` (e.g. `tuanzii:git-com
 | `brainstorming` | 任何创造性工作之前：新功能、新组件、改行为——先聊清楚需求再动手 |
 | `grilling` | 用户想压力测试一个计划/决策/想法，或说出"拷问我"等触发词时 |
 | `domain-modeling` | 敲定领域术语、统一语言，或记录架构决策时；维护 `CONTEXT.md` 和 ADR |
-| `writing-plans` | 有设计/需求、任务跨多步、准备碰代码之前 |
 | `subagent-driven-development` | 执行包含多个独立任务的实施计划 |
 | `test-driven-development` | 写任何功能或修 bug，动手写实现代码之前 |
 | `systematic-debugging` | 遇到任何 bug、测试失败、异常行为，提修复方案之前 |
@@ -55,7 +54,6 @@ Skills in this plugin are referenced as `tuanzii:<skill>` (e.g. `tuanzii:git-com
 | `dispatching-parallel-agents` | 面对 2 个以上互不依赖的任务 |
 | `using-git-worktrees` | 开始需要隔离工作区的特性开发 |
 | `finishing-a-development-branch` | 实现完成、测试全绿，要决定合并/PR/清理时 |
-| `writing-skills` | 新建、修改 skill，或验证 skill 是否好使 |
 
 ### Git 工具
 
@@ -165,6 +163,7 @@ When multiple skills could apply, use this order:
 > 【老王注】原版第二档举例 frontend-design/mcp-builder，那是 superpowers 全家桶里的货，本项目没有——换成 tuanzii 实际装的工具类 skill。
 
 "Let's build X" → brainstorming first, then writing-plans.
+> 【老王注】writing-plans 已移除：build 类请求在 brainstorming 获批设计后，直接产出实施计划进入实现，不再有专门 skill。
 "Fix this bug" → systematic-debugging first, then test-driven-development.
 "Commit this" → git-commit directly (single tool job, no process skill needed).
 > 【老王注】补了第三条例子：单一工具任务不用硬套流程类 skill——KISS，别为了走流程而走流程。
@@ -175,11 +174,10 @@ When multiple skills could apply, use this order:
 
 | 场景 | 调用顺序 |
 |------|----------|
-| 新功能、组件或行为改动 | `brainstorming` → `writing-plans` → `using-git-worktrees`（需要隔离时）→ `subagent-driven-development` 或直接实现；每个实现任务内部遵循 `test-driven-development` → `verification-before-completion`，完成后使用 `finishing-a-development-branch` |
+| 新功能、组件或行为改动 | `brainstorming` → `using-git-worktrees`（需要隔离时）→ 直接产出实施计划 → `subagent-driven-development` 或直接实现；每个实现任务内部遵循 `test-driven-development` → `verification-before-completion`，完成后使用 `finishing-a-development-branch` |
 | 缺陷、失败测试或异常行为 | `systematic-debugging` → `test-driven-development` → `verification-before-completion` |
 | 多个互不依赖的问题 | 先确认根因或任务域独立，再用 `dispatching-parallel-agents`；每个 Agent 仍遵循其任务需要的调试、TDD 与验证流程 |
 | 单一 Git 操作 | 直接使用相应 Git 技能；若准备声称结果已完成、已修复或已通过，再使用 `verification-before-completion` |
-| 创建或修改技能 | `writing-skills`；需要实现或验证其中的脚本时，按任务再叠加 TDD、调试与完成前验证 |
 
 `using-git-worktrees` 负责工作区隔离，`git-worktree` 负责具体的 Git worktree 管理命令；前者是流程技能，后者是工具技能，不应混用。
 

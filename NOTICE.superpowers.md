@@ -1,8 +1,8 @@
 # Attribution: superpowers
 
-本仓库 `skills/` 目录下的以下 11 个 skill 衍生自 [obra/superpowers](https://github.com/obra/superpowers)（v6.0.3）：
+本仓库 `skills/` 目录下的以下 9 个 skill 衍生自 [obra/superpowers](https://github.com/obra/superpowers)（v6.0.3）：
 
-`brainstorming`, `dispatching-parallel-agents`, `finishing-a-development-branch`, `subagent-driven-development`, `systematic-debugging`, `test-driven-development`, `using-git-worktrees`, `using-superpowers`, `verification-before-completion`, `writing-plans`, `writing-skills`
+`brainstorming`, `dispatching-parallel-agents`, `finishing-a-development-branch`, `subagent-driven-development`, `systematic-debugging`, `test-driven-development`, `using-git-worktrees`, `using-superpowers`, `verification-before-completion`
 
 注：上游的 `using-superpowers` 在本项目中已更名为 `using-tuanzii`（内容已按本插件适配）。
 

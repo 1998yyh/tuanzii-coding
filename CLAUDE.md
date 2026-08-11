@@ -27,18 +27,16 @@ skills/                  # Skills 目录，每个 skill 一个文件夹，入口
   git-cleanBranches/     # 分支清理
   git-worktree/          # Worktree 管理
   deepinit/              # 深度初始化 CLAUDE.md（替代内置 /init，含 references/）
-  # ── 以下 11 个衍生自 obra/superpowers v6.0.3（MIT），见 NOTICE.superpowers.md ──
+  # ── 以下 9 个衍生自 obra/superpowers v6.0.3（MIT），见 NOTICE.superpowers.md ──
   brainstorming/         # 需求探索 → 设计文档
-  writing-plans/         # 设计文档 → 细粒度实施计划
   subagent-driven-development/  # subagent 逐任务实现 + 评审（含 scripts/、prompt 模板）
   finishing-a-development-branch/  # 分支收尾
   using-git-worktrees/   # 隔离工作区
   test-driven-development/  # TDD 铁律
   systematic-debugging/  # 四阶段根因调试（含辅助脚本/技术文档）
-  verification-before-completion/  # 完成前强制验证
+  verification-before-completion/  # 完成声明前的证据门禁
   dispatching-parallel-agents/  # 并行派 agent
   using-tuanzii/         # Skill 路由元规则（含各平台 references/）
-  writing-skills/        # 用 TDD 方式编写 skill（含测试方法论文档）
   # ── 以下衍生自 op7418/Humanizer-zh（MIT），见 NOTICE.humanizer-zh.md ──
   humanizer-zh/          # 去除文本 AI 写作痕迹（24 种模式检测 + 质量评分）
   # ── 以下衍生自 mattpocock/skills（MIT），见 NOTICE.mattpocock-skills.md ──
@@ -67,9 +65,36 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 
 无构建系统、无测试框架、无 lint 工具。项目是纯脚手架。
 
+## 核心架构：插件发现与加载
+
+```text
+.claude-plugin/marketplace.json
+  -> 声明 marketplace 元数据与插件 source: "./"
+  -> .claude-plugin/plugin.json 提供插件身份和安装版本
+  -> Claude Code 从 skills/、output-styles/、hooks/、monitors/ 发现插件能力
+```
+
+- `skills/<name>/SKILL.md` 的目录名与 frontmatter `name` 共同决定 skill 是否可被发现。
+- `.claude-plugin/plugin.json` 的 `version` 与 `.claude-plugin/marketplace.json` 的 `metadata.version` 是发布版本事实来源，必须保持一致。
+- `package.json` 只记录仓库的 Node 元数据，不控制插件发布版本。
+
+## 可执行验证命令
+
+```bash
+# 检查 JSON 清单语法
+node -e "const fs=require('fs'); for (const p of ['package.json','.claude-plugin/plugin.json','.claude-plugin/marketplace.json','hooks/hooks.json','monitors/monitors.json']) JSON.parse(fs.readFileSync(p,'utf8'))"
+
+# 检查仓库内 shell 脚本语法
+sh -n skills/brainstorming/scripts/start-server.sh skills/brainstorming/scripts/stop-server.sh skills/subagent-driven-development/scripts/review-package skills/subagent-driven-development/scripts/sdd-workspace skills/subagent-driven-development/scripts/task-brief
+
+# 检查补丁中的空白错误
+git diff --check
+```
+
 ## 开发规则
 
 - **提交前必须升级版本号**：每次 `git commit` 之前，先升级 `.claude-plugin/plugin.json` 中的 `version`（遵循语义化版本：新功能 minor、修复 patch、破坏性变更 major），并同步升级 `.claude-plugin/marketplace.json` 的 `metadata.version`（两处独立维护，需手动保持一致）。注意 `package.json` 的 `version` 是另一套独立编号，不参与插件发布。
+- **Skill 清单必须同步**：新增、删除或重命名 `skills/*` 时，同步更新 `skills/using-tuanzii/SKILL.md` 与本文件；若条目衍生自外部项目，还要同步对应 `NOTICE.<来源>.md`。
 
 ## 环境特殊规范
 
@@ -134,18 +159,16 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 | Skill | 功能 |
 |-------|------|
 | `brainstorming` | 需求探索：一次一问澄清意图 → 2-3 方案 → 设计文档落盘，未批准禁动手 |
-| `writing-plans` | 把设计拆成细粒度计划：每步含完整代码/命令/预期输出，禁占位符 |
 | `subagent-driven-development` | 每任务派 fresh subagent 实现 + 规格/质量双评审 + 进度账本抗压缩 |
 | `finishing-a-development-branch` | 分支收尾：验证测试，给合并/PR/清理选项 |
 | `using-git-worktrees` | 开始特性工作前确保隔离工作区 |
 | `test-driven-development` | TDD 铁律：无失败测试禁写实现，含反借口表与红旗清单 |
 | `systematic-debugging` | 四阶段调试：根因优先禁瞎修；连续 3 次修复失败熔断，转质疑架构 |
-| `verification-before-completion` | 未跑验证命令禁声称完成：证据先于断言 |
+| `verification-before-completion` | 完成声明前的证据门禁：按结论选择充分检查，并披露未验证项 |
 | `dispatching-parallel-agents` | 2+ 独立问题域并行派 agent，含 prompt 四要素 |
 | `using-tuanzii` | Skill 路由元规则：1% 可能适用即调用，process skill 优先 |
-| `writing-skills` | 用 TDD 方式写 skill：压力场景先行，反合理化加固，SDO 发现优化 |
 
-注：这组 skill 内部互相以 `tuanzii:<skill>` 引用，已与本插件自洽；`docs/superpowers/` 与 `.superpowers/` 路径沿用原版约定（本仓库已有对应目录）。全部 47 个文件含行内中文注解（统一 `【老王注】` 前缀，md 用 `> `、脚本用对应注释语法），英文原文一字未动；`grep '【老王注】'` 可速览全部注解，`grep -v '【老王注】'` 即还原原版。
+注：这组 skill 内部互相以 `tuanzii:<skill>` 引用，已与本插件自洽；`docs/superpowers/` 与 `.superpowers/` 路径沿用原版约定（本仓库已有对应目录）。除 `verification-before-completion` 已按当前工作流精简重写外，其余 Superpowers 衍生内容通过 `【老王注】` 旁注适配，保留上游英文原文；`grep '【老王注】'` 可速览这些旁注。
 
 ### 写作辅助（Skills，衍生自 op7418/Humanizer-zh，MIT，见 NOTICE.humanizer-zh.md）
 
@@ -176,5 +199,5 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.1
-**最后更新**: 2026-07-19
+**版本**: v1.4
+**最后更新**: 2026-08-11
