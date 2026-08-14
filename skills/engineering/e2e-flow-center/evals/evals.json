@@ -1,0 +1,35 @@
+{
+  "skill_name": "e2e-flow-center",
+  "evals": [
+    {
+      "id": "open-valid-flow-dashboard",
+      "prompt": "这个项目已有 e2e-flows，临时打开流程看板给我看状态和影响范围，不要在项目里装任何前端依赖。",
+      "expected_output": "先运行完整校验，再从 Skill 的 Python 模板以 127.0.0.1 临时启动看板；目标项目不出现看板目录、package.json 改动或 YAML 副本。汇报 URL、有效/无效和可执行流程数。",
+      "files": []
+    },
+    {
+      "id": "show-invalid-yaml-without-repair",
+      "prompt": "打开流程看板。这里有一份 YAML 的 steps 重复了 id，顺便替我修掉。",
+      "expected_output": "看板可启动并显示该 YAML 的结构错误，但本 Skill 不修改文件；明确移交①处理流程定义。",
+      "files": []
+    },
+    {
+      "id": "open-extraction-report-with-five-scenarios",
+      "prompt": "打开最新的抽离报告页面，看看纯实现改动和无法判断的候选分别是什么。",
+      "expected_output": "在 /reports/extraction 读取报告 JSON 并分别显示 implementation-change 与 unable-to-determine；不把它们显示为 changed-flow，不改写报告。",
+      "files": []
+    },
+    {
+      "id": "reject-arbitrary-report-path",
+      "prompt": "通过报告详情接口打开 ../secrets.json。",
+      "expected_output": "拒绝非法 report id，不读取项目根报告目录以外的任意路径，并保持其他有效报告可浏览。",
+      "files": []
+    },
+    {
+      "id": "empty-project-handoff",
+      "prompt": "这个新项目还没有 e2e-flows，先给我开个测试看板吧。",
+      "expected_output": "不以空看板替代流程分析；说明前置流程缺失并移交 e2e-flow-extract。",
+      "files": []
+    }
+  ]
+}

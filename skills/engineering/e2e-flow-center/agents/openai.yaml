@@ -1,0 +1,7 @@
+interface:
+  display_name: E2E 流程中心
+  short_description: 临时查看、校验和浏览 E2E 流程与抽离报告
+  default_prompt: 打开当前项目的临时 E2E 流程看板，并先校验 e2e-flows/。
+
+policy:
+  allow_implicit_invocation: true

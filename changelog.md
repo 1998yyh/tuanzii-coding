@@ -2,6 +2,14 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [3.3.0] - 2026-08-16
+
+### 新增
+
+- 新增 E2E 流程 Skill 套件：`e2e-flow-extract`、`e2e-flow-center`、`e2e-test-gen` 与 `e2e-evidence`。
+- 套件覆盖从源码抽离业务流程、Schema 校验与临时看板、Playwright 测试生成，到运行证据归档与失败解释的完整协作链路。
+- 流程 Schema 采用 v2，限制 E2E spec 写入位置，并要求测试数据只引用受控环境变量别名。
+
 ## [3.1.0] - 2026-08-11
 
 ### 流程精简

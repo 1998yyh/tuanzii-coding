@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>E2E Flow Center</title>
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#content">跳到主要内容</a>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">TEMPORARY LOCALHOST CONSOLE</p>
+        <h1>E2E Flow Center</h1>
+        <p id="project-summary" class="muted">正在读取项目数据…</p>
+      </div>
+      <p class="session-note">只读会话 · 127.0.0.1</p>
+    </header>
+    <main id="content" class="layout">
+      <nav class="tabs" aria-label="看板视图">
+        <button class="tab" id="flows-tab" type="button" role="tab" aria-selected="true" aria-controls="flows-panel">流程目录</button>
+        <button class="tab" id="reports-tab" type="button" role="tab" aria-selected="false" aria-controls="reports-panel">抽离报告</button>
+      </nav>
+
+      <section id="flows-panel" role="tabpanel" aria-labelledby="flows-tab">
+        <div id="flow-summary" class="metrics" aria-live="polite"></div>
+        <div class="section-heading">
+          <div><p class="eyebrow">FLOW CATALOG</p><h2>流程与校验结果</h2></div>
+          <p class="muted">只显示业务摘要；不会显示凭据或步骤数据。</p>
+        </div>
+        <div id="flow-list" class="flow-list" aria-live="polite"></div>
+      </section>
+
+      <section id="reports-panel" role="tabpanel" aria-labelledby="reports-tab" hidden>
+        <div class="report-layout">
+          <aside><div class="section-heading compact"><div><p class="eyebrow">IMMUTABLE SNAPSHOTS</p><h2>抽离报告</h2></div></div><div id="report-list" class="report-list" aria-live="polite"></div></aside>
+          <article id="report-detail" class="report-detail" aria-live="polite"><p class="empty">选择一份报告查看变更、证据和移交信息。</p></article>
+        </div>
+      </section>
+    </main>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

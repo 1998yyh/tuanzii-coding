@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "id": "extract-20260813T074531Z-a1b2c3",
+  "createdAt": "2026-08-13T07:45:31Z",
+  "scenarios": ["first-extraction"],
+  "approvalMode": "manual",
+  "validation": {
+    "level": "light",
+    "status": "passed",
+    "errors": []
+  },
+  "summary": {
+    "createdFlowCount": 1,
+    "semanticUpdatedFlowCount": 0,
+    "provenanceUpdatedFlowCount": 0,
+    "unchangedFlowCount": 0,
+    "readyFlowCount": 0,
+    "draftFlowCount": 1,
+    "blockedFlowCount": 1
+  },
+  "flowChanges": [
+    {
+      "flowId": "user-login",
+      "flowPath": "e2e-flows/user-login.yaml",
+      "operation": "created",
+      "lifecycle": {
+        "before": null,
+        "after": {
+          "status": "draft",
+          "enabled": false,
+          "review": {
+            "mode": "manual",
+            "basis": "pending-user-confirmation"
+          }
+        }
+      },
+      "flow": {
+        "name": "用户登录",
+        "persona": "已注册用户",
+        "goal": "登录后看到工作台，并显示本人昵称。",
+        "entryUrl": "/login",
+        "successSignal": "工作台页显示当前用户昵称。"
+      },
+      "evidence": [
+        {
+          "path": "src/pages/login/LoginForm.tsx",
+          "lineStart": 24,
+          "lineEnd": 56,
+          "reason": "登录表单和提交后的工作台导航。"
+        },
+        {
+          "path": "src/auth/login-controller.ts",
+          "lineStart": 18,
+          "lineEnd": 47,
+          "reason": "已注册用户通过凭据建立会话。"
+        }
+      ],
+      "nextAction": "await-user-confirmation"
+    }
+  ],
+  "coverage": {
+    "covered": [
+      {
+        "area": "身份认证",
+        "flowIds": ["user-login"],
+        "reason": "登录入口、表单和工作台导航均已检查。"
+      }
+    ],
+    "uncovered": [
+      {
+        "area": "第三方单点登录",
+        "reason": "当前仓库没有外部身份提供商返回后的可观察成功结果。",
+        "evidencePaths": ["src/auth/sso.ts"]
+      }
+    ]
+  },
+  "uncertainties": [],
+  "handoff": {
+    "e2eTestGen": {
+      "readyFlowIds": [],
+      "blockedFlows": [
+        {
+          "flowId": "user-login",
+          "reason": "awaiting-user-confirmation"
+        }
+      ]
+    }
+  }
+}

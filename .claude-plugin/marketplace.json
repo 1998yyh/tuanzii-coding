@@ -4,14 +4,14 @@
     "name": "hao.yang"
   },
   "metadata": {
-    "description": "tuanzii Claude Code Marketplace plugin",
-    "version": "3.2.0"
+    "description": "tuanzii: Git 工具、工程流程、工程流水线与 E2E 流程管理、效率与写作辅助、追问与领域建模 skills",
+    "version": "3.3.0"
   },
   "plugins": [
     {
       "name": "tuanzii",
       "source": "./",
-      "description": "tuanzii: Git 工具、工程流程、追问与领域建模、工程流水线、效率与写作辅助 skills + 输出风格"
+      "description": "tuanzii: Git 工具、工程流程、工程流水线与 E2E 流程管理、效率与写作辅助、追问与领域建模 skills + 输出风格"
     }
   ]
 }

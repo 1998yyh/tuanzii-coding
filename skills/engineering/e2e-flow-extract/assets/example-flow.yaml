@@ -1,0 +1,80 @@
+# 这是 e2e-flow-extract 的完整字段基线，不是可直接用于任何项目的真实流程。
+# 复制到 <project-root>/e2e-flows/<flow-id>.yaml 后，必须以源码证据替换示例值。
+# 禁止把密码、token、Cookie、真实邮箱或其他私密数据写入此文件。
+
+schemaVersion: 2
+id: user-login
+name: 用户登录
+description: 已注册用户通过账号密码进入工作台。
+category: 身份认证
+persona: 已注册用户
+goal: 登录后看到工作台，并显示本人昵称。
+priority: P0
+status: draft
+enabled: false
+review:
+  mode: manual
+  basis: pending-user-confirmation
+
+entry:
+  url: /login
+  requiresAuth: false
+
+fixtures:
+  env:
+    username: E2E_USER
+    password: E2E_PASSWORD
+  sources:
+    login-user: existing-project-fixture
+
+steps:
+  - id: open-login
+    title: 打开登录页
+    action: navigate
+    target:
+      hint: 登录页路由
+      value: /login
+    expected: 页面显示账号输入框、密码输入框和登录按钮。
+    signal:
+      kind: visible
+      locator:
+        role: button
+        name: 登录
+
+  - id: submit-credentials
+    title: 填入测试账号并提交
+    action: fill
+    target:
+      hint: 登录表单的账号与密码字段
+    data:
+      username: fixtures.env.username
+      password: fixtures.env.password
+    expected: 提交后用户进入工作台。
+    signal:
+      kind: url
+      value: /dashboard
+
+  - id: verify-dashboard
+    title: 确认当前用户已进入工作台
+    action: assert
+    expected: 页面顶部显示当前用户昵称。
+    signal:
+      kind: text
+      locator:
+        testId: current-user
+
+paths:
+  - src/auth/**
+  - src/pages/login/**
+
+test:
+  source: external
+  spec: tests/e2e/user-login.spec.js
+
+sources:
+  - src/auth/login-controller.ts
+  - src/pages/login/LoginForm.tsx
+
+tags:
+  - 冒烟
+alwaysRunOnAffected: true

@@ -1,0 +1,4 @@
+interface:
+  display_name: "E2E 证据运行"
+  short_description: "运行项目中已启用的 E2E 流程并归档完整可复核的失败诊断证据"
+  default_prompt: "Use $e2e-evidence to run active E2E flows and collect evidence."

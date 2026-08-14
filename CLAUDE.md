@@ -19,7 +19,7 @@ claude plugin install tuanzii@tuanzii
 
 ```
 .claude-plugin/
-  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 44 个 skill 路径
+  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 48 个 skill 路径
   marketplace.json       # 本地 marketplace 清单（新版 Claude Code 市场规范要求，含独立 metadata.version）
 skills/                  # Skills 目录，按用途分组子目录，每个 skill 一个文件夹，入口为 SKILL.md
   git/                   # Git 工具（7 个）
@@ -45,7 +45,7 @@ skills/                  # Skills 目录，按用途分组子目录，每个 ski
     grill-me/            # /grill-me 入口（user-invoked）
     grill-with-docs/     # /grill-with-docs 入口：追问 + 沉淀文档（user-invoked）
     domain-modeling/     # 领域建模：CONTEXT.md 词汇表与 ADR（含格式文档）
-  engineering/           # 工程流水线（15 个，衍生自 mattpocock/skills ※）
+  engineering/           # 工程流水线与 E2E 流程管理（19 个；其中 15 个衍生自 mattpocock/skills ※）
     ask-matt/            # skill 路由入口
     codebase-design/     # 深模块设计共享词汇库
     code-review/         # 双轴评审（规范 + spec）
@@ -61,6 +61,10 @@ skills/                  # Skills 目录，按用途分组子目录，每个 ski
     wayfinder/           # 超大规模工作的决策工单地图
     wizard/              # 生成交互式 bash 向导（含 template.sh）
     setup-matt-pocock-skills/  # 工程流水线一次性初始化
+    e2e-flow-extract/    # 从源码抽离和维护 E2E 业务流程 YAML
+    e2e-flow-center/     # E2E 流程 Schema 校验与临时只读看板
+    e2e-test-gen/        # 为 ready 流程生成并验证 Playwright 测试
+    e2e-evidence/        # 运行 active 流程并归档可复核证据
   productivity/          # 效率（5 个，衍生自 mattpocock/skills ※）
     handoff/             # 对话交接文档
     teach/               # 工作区内教学（含格式文档）
@@ -231,6 +235,15 @@ git diff --check
 
 流水线主线：`to-spec` → `to-tickets` → `triage` → `wayfinder` → `implement`，各环节可用 `grilling` 系压力测试，`codebase-design` 提供共享设计语言。首次使用前跑一次 `setup-matt-pocock-skills`。
 
+### E2E 流程管理（skills/engineering/）
+
+| Skill | 功能 |
+|-------|------|
+| `e2e-flow-extract` | 从源码、路由、已有测试和产品文档抽离或维护端到端业务流程 YAML，并写审计报告 |
+| `e2e-flow-center` | 完整校验 `e2e-flows/`，并从临时 localhost 看板查看流程与抽离报告 |
+| `e2e-test-gen` | 将已确认的 ready 流程转换为并验证 Playwright 测试；通过后推进为 active |
+| `e2e-evidence` | 运行 active 流程，归档截图、视频、Trace、HTML 报告与日志，并基于证据解释失败 |
+
 ### 效率（skills/productivity/，衍生自 mattpocock/skills ※）
 
 | Skill | 功能 |
@@ -276,5 +289,5 @@ git diff --check
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.5
-**最后更新**: 2026-08-15
+**版本**: v1.6
+**最后更新**: 2026-08-16

@@ -1,0 +1,7 @@
+interface:
+  display_name: E2E 流程抽离
+  short_description: 从源码抽离、补充或更新端到端业务流程 YAML
+  default_prompt: 梳理当前项目的核心端到端业务流程，并写入 e2e-flows/。
+
+policy:
+  allow_implicit_invocation: true

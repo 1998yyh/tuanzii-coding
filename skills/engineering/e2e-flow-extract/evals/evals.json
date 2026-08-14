@@ -1,0 +1,59 @@
+{
+  "skill_name": "e2e-flow-extract",
+  "evals": [
+    {
+      "id": "first-extraction",
+      "prompt": "这是一个刚接手的 Vue 项目，仓库里没有 e2e-flows。请从路由、页面和 README 梳理最核心的端到端流程，先不要写测试或安装看板。",
+      "expected_output": "识别为首次抽离；建立有限的核心流程覆盖图；在项目根 e2e-flows 创建仅含 draft、enabled: false 的流程 YAML，并报告未覆盖区域与待确认的业务语义。",
+      "files": []
+    },
+    {
+      "id": "add-flow-to-legacy-project",
+      "prompt": "这个项目已经有 e2e-flows。我们刚加入了“运营人员导出月度结算单”的功能，帮我看看应该新增流程还是改已有流程；只处理流程定义，不生成 Playwright。",
+      "expected_output": "先阅读现有流程并从源码确认该功能是否构成独立的 persona + goal；若独立则只新增一个 draft 流程，若不是则解释为何归入已有流程；保留旧流程并提供来源、存疑项和移交建议。",
+      "files": []
+    },
+    {
+      "id": "revise-existing-flow",
+      "prompt": "用户下单流程原来付款成功就完成，现在必须等待风控审核通过才能看到订单已确认。请检查现有流程 YAML 和相关源码，更新受影响的流程定义，但不要改测试代码。",
+      "expected_output": "将其识别为业务语义变化；原地更新同一流程的入口/步骤/预期信号（仅限有证据的项），并设置 status: draft、enabled: false；列出变化证据、用户确认项和需要③复核的测试。",
+      "files": []
+    },
+    {
+      "id": "confirm-then-handoff-to-test-generation",
+      "prompt": "user-login 和 password-reset 这两条流程我确认没问题，直接去写 Playwright 测试。",
+      "expected_output": "只将已确认的 user-login 和 password-reset 从 draft 持久化为 ready、enabled: false，并写入 review.mode: manual / review.basis: user-confirmed；重新读取验证并原子写入带 readyFlowIds 的报告后，携带明确 report-id 移交 e2e-test-gen。未确认、仍为 draft 或写入/校验失败的流程不能移交。",
+      "files": []
+    },
+    {
+      "id": "automated-source-validated-handoff",
+      "prompt": "以 approvalMode: source-validated 在 CI 中检查当前分支新增的退款申请流程。只要每个业务字段都有源码证据且完整 Schema 校验通过，就直接交给测试生成；否则保留草稿并给出机器可读的阻塞原因。",
+      "expected_output": "识别为显式自动验收；仅对证据齐全、无存疑且完整校验通过的流程写入 status: ready、enabled: false 与 review.mode: source-validated；重新读取验证后才移交 e2e-test-gen。缺证据、未完整校验或写入失败的流程保持 draft，不等待人工回复也不得移交。",
+      "files": []
+    },
+    {
+      "id": "open-extraction-report-page",
+      "prompt": "梳理完这个项目的核心流程后，我想用页面查看抽离报告，重点看哪些流程变了、证据来自哪里和哪些还不能交给测试生成。",
+      "expected_output": "先写入脱敏、不可变的 e2e-flow-reports/<report-id>.json；报告以 scenarios 去重数组准确记录首次抽离、新增流程、原流程变更、纯实现变化和无法判断中实际命中的类别，不能用 mixed 或把纯实现/无法判断伪装为原流程变更。报告还含流程变更、生命周期前后状态、证据、覆盖/存疑和移交清单。随后移交 e2e-flow-center 打开临时 localhost 的 /reports/extraction 页面，不让 e2e-flow-extract 自行启动 Web 服务或改写报告。",
+      "files": []
+    },
+    {
+      "id": "implementation-change-report-scenario",
+      "prompt": "结算页只是从旧组件迁到新组件，用户目标、入口和成功结果都没变。更新必要的溯源后给我抽离报告，不要把它当成业务流程改动。",
+      "expected_output": "报告 scenarios 包含 implementation-change 而不包含 changed-flow；保持现有流程 status 和 enabled 不变，flowChanges 使用 provenance-updated，并向③标明只需复核测试。",
+      "files": []
+    },
+    {
+      "id": "unable-to-determine-report-scenario",
+      "prompt": "当前分支改了会员续费入口，但没有产品说明，也找不到成功页面或状态信号。请更新流程并在报告中交给测试生成。",
+      "expected_output": "识别为 unable-to-determine；不修改现有流程定义或生命周期，报告 scenarios 包含 unable-to-determine 并在 uncertainties 说明所缺证据和需确认的问题。该候选不得进入 readyFlowIds 或移交③。",
+      "files": []
+    },
+    {
+      "id": "retire-and-restore-flow",
+      "prompt": "确认“旧版批量导入”功能已下线：源码入口和完成页都已移除。请处理对应流程；下周如果我明确要求恢复它，再按正常确认流程处理。",
+      "expected_output": "下线时保留 YAML、不删除文件，写入 status: retired 和 enabled: false，不移交③；恢复只能在用户明确请求后按当前源码重新评审，默认回到 draft + manual/pending-user-confirmation，不能根据相似页面自行恢复。",
+      "files": []
+    }
+  ]
+}

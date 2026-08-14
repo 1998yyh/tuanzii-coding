@@ -82,6 +82,15 @@ Skills in this plugin are referenced as `tuanzii:<skill>` (e.g. `tuanzii:git-com
 | `wizard` | 生成交互式 bash 向导，引导人完成只有人能做的步骤（配密钥、开基础设施） |
 | `setup-matt-pocock-skills` | 首次使用工程流水线前的一次性配置：issue tracker、分诊标签、文档布局 |
 
+### E2E 流程管理（engineering/）
+
+| Skill | 什么时候用 |
+|-------|-----------|
+| `e2e-flow-extract` | 用户要梳理核心业务流程、盘点端到端场景、把流程抽成 YAML，或业务语义发生变化 |
+| `e2e-flow-center` | 用户要校验 `e2e-flows/`、打开临时流程看板、查看流程状态、影响范围或抽离报告 |
+| `e2e-test-gen` | 用户要根据 ready 流程生成、补齐或复核 Playwright E2E 测试 |
+| `e2e-evidence` | 用户要运行 active 流程、重跑失败、收集截图/Trace/视频，或根据证据解释 E2E 失败 |
+
 ### Git 工具（git/）
 
 | Skill | 什么时候用 |

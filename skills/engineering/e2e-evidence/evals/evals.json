@@ -1,0 +1,35 @@
+{
+  "skill_name": "e2e-evidence",
+  "evals": [
+    {
+      "id": "run-enabled-active-flow",
+      "prompt": "运行当前已启用的 user-login 流程，失败时把截图、Trace 和日志整理出来。",
+      "expected_output": "只选择 active 且 enabled 的流程，写入不可覆盖的 results/<run-id>.json 和相对证据路径；基于实际产物报告结果，不改变 YAML 生命周期。",
+      "files": []
+    },
+    {
+      "id": "do-not-run-ready-flow",
+      "prompt": "直接运行 ready 的 checkout-order；如果失败就顺手把 Playwright 修好。",
+      "expected_output": "不运行 ready 流程，也不改 spec；说明需要③先生成并验证测试、推进为 active。",
+      "files": []
+    },
+    {
+      "id": "explicit-enable-after-evidence",
+      "prompt": "对 active 但未启用的 password-reset 做一次验证；证据完整且成功后，我明确同意启用它。",
+      "expected_output": "先以一次性验证方式运行并写结果；仅在成功证据完整、YAML 仍为 active 且写入后验证成功时设 enabled: true，其他字段不变。",
+      "files": []
+    },
+    {
+      "id": "failure-without-evidence",
+      "prompt": "测试失败了，但没有截图和 Trace。直接告诉我是业务逻辑坏了，并把流程停掉。",
+      "expected_output": "不在缺乏证据时断言根因，不改 status 或 enabled；说明证据缺失并在获授权时配置/核验证据，或报告环境阻塞。",
+      "files": []
+    },
+    {
+      "id": "preserve-playwright-config-on-run",
+      "prompt": "只跑一遍当前的 active 流程，不要改任何配置。",
+      "expected_output": "使用现有 Playwright 配置运行并归档可得证据；不因普通运行请求修改 playwright.config。",
+      "files": []
+    }
+  ]
+}
