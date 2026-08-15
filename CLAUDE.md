@@ -19,31 +19,61 @@ claude plugin install tuanzii@tuanzii
 
 ```
 .claude-plugin/
-  plugin.json            # 插件清单（name: tuanzii）
+  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 44 个 skill 路径
   marketplace.json       # 本地 marketplace 清单（新版 Claude Code 市场规范要求，含独立 metadata.version）
-skills/                  # Skills 目录，每个 skill 一个文件夹，入口为 SKILL.md
-  git-commit/            # 智能 Git 提交
-  git-rollback/          # 交互式回滚
-  git-cleanBranches/     # 分支清理
-  git-worktree/          # Worktree 管理
-  deepinit/              # 深度初始化 CLAUDE.md（替代内置 /init，含 references/）
-  # ── 以下 9 个衍生自 obra/superpowers v6.0.3（MIT），见 NOTICE.superpowers.md ──
-  brainstorming/         # 需求探索 → 设计文档
-  subagent-driven-development/  # subagent 逐任务实现 + 评审（含 scripts/、prompt 模板）
-  finishing-a-development-branch/  # 分支收尾
-  using-git-worktrees/   # 隔离工作区
-  test-driven-development/  # TDD 铁律
-  systematic-debugging/  # 四阶段根因调试（含辅助脚本/技术文档）
-  verification-before-completion/  # 完成声明前的证据门禁
-  dispatching-parallel-agents/  # 并行派 agent
-  using-tuanzii/         # Skill 路由元规则（含各平台 references/）
-  # ── 以下衍生自 op7418/Humanizer-zh（MIT），见 NOTICE.humanizer-zh.md ──
-  humanizer-zh/          # 去除文本 AI 写作痕迹（24 种模式检测 + 质量评分）
-  # ── 以下衍生自 mattpocock/skills（MIT），见 NOTICE.mattpocock-skills.md ──
-  grilling/              # 连环追问循环（打磨计划/决策的核心引擎）
-  grill-me/              # /grill-me 入口：追问打磨计划（user-invoked）
-  grill-with-docs/       # /grill-with-docs 入口：追问 + 沉淀文档（user-invoked）
-  domain-modeling/       # 领域建模：维护 CONTEXT.md 词汇表与 ADR（含格式文档）
+skills/                  # Skills 目录，按用途分组子目录，每个 skill 一个文件夹，入口为 SKILL.md
+  git/                   # Git 工具（7 个）
+    git-commit/          # 智能 Git 提交
+    git-rollback/        # 交互式回滚
+    git-cleanBranches/   # 分支清理
+    git-worktree/        # Worktree 管理
+    resolving-merge-conflicts/  # 解决 merge/rebase 冲突 ※
+    git-guardrails-claude-code/ # 钩子拦截危险 git 命令 ※
+    setup-pre-commit/    # Husky + lint-staged 预提交钩子 ※
+  process/               # 工程流程（9 个，衍生自 obra/superpowers v6.0.3，MIT，见 NOTICE.superpowers.md）
+    brainstorming/       # 需求探索 → 设计文档
+    subagent-driven-development/  # subagent 逐任务实现 + 评审（含 scripts/、prompt 模板）
+    finishing-a-development-branch/  # 分支收尾
+    using-git-worktrees/ # 隔离工作区
+    test-driven-development/  # TDD 铁律
+    systematic-debugging/  # 四阶段根因调试（含辅助脚本/技术文档）
+    verification-before-completion/  # 完成声明前的证据门禁
+    dispatching-parallel-agents/  # 并行派 agent
+    using-tuanzii/       # Skill 路由元规则（含各平台 references/）
+  grilling/              # 追问与领域建模（4 个，衍生自 mattpocock/skills，MIT，见 NOTICE.mattpocock-skills.md）
+    grilling/            # 连环追问核心引擎（design tree / frontier 机制）
+    grill-me/            # /grill-me 入口（user-invoked）
+    grill-with-docs/     # /grill-with-docs 入口：追问 + 沉淀文档（user-invoked）
+    domain-modeling/     # 领域建模：CONTEXT.md 词汇表与 ADR（含格式文档）
+  engineering/           # 工程流水线（15 个，衍生自 mattpocock/skills ※）
+    ask-matt/            # skill 路由入口
+    codebase-design/     # 深模块设计共享词汇库
+    code-review/         # 双轴评审（规范 + spec）
+    diagnosing-bugs/     # 疑难 bug 诊断循环（含 HITL 脚本模板）
+    improve-codebase-architecture/  # 架构改进扫描 + HTML 报告
+    implement/           # 按 spec/工单实现
+    prototype/           # 一次性原型
+    research/            # 一手资料调研落盘
+    tdd/                 # 测试驱动开发（含 mocking/tests 文档）
+    to-spec/             # 对话 → spec 发布
+    to-tickets/          # 计划 → tracer-bullet 工单
+    triage/              # issue/PR 状态机分诊
+    wayfinder/           # 超大规模工作的决策工单地图
+    wizard/              # 生成交互式 bash 向导（含 template.sh）
+    setup-matt-pocock-skills/  # 工程流水线一次性初始化
+  productivity/          # 效率（5 个，衍生自 mattpocock/skills ※）
+    handoff/             # 对话交接文档
+    teach/               # 工作区内教学（含格式文档）
+    to-questionnaire/    # 决策 → 问卷
+    wait-what/           # 重新表达未讲清的消息
+    writing-for-agents/  # 写给 agent 的文档（含 SKILL-MECHANICS.md）
+  writing/
+    humanizer-zh/        # 去除文本 AI 写作痕迹（衍生自 op7418/Humanizer-zh，MIT，见 NOTICE.humanizer-zh.md）
+  misc/                  # 杂项（2 个，衍生自 mattpocock/skills ※）
+    migrate-to-shoehorn/ # 测试 as 断言 → shoehorn
+    scaffold-exercises/  # 课程练习目录脚手架
+  project/
+    deepinit/            # 深度初始化 CLAUDE.md（替代内置 /init，含 references/）
 output-styles/           # 输出风格规则，每个风格一个 .md 文件
   engineer-professional.md   # 专业工程师
   laowang-engineer.md        # 老王暴躁技术流
@@ -59,9 +89,11 @@ docs/
   superpowers/           # superpowers 流程产物（plans/ 实施计划、specs/ 设计文档）
 NOTICE.superpowers.md    # superpowers 衍生内容归属（MIT, Jesse Vincent）
 NOTICE.humanizer-zh.md   # humanizer-zh 衍生内容归属（MIT, 歸藏）
-NOTICE.mattpocock-skills.md  # grilling/domain-modeling 衍生内容归属（MIT, Matt Pocock）
+NOTICE.mattpocock-skills.md  # mattpocock/skills 衍生内容归属（MIT, Matt Pocock，共 29 个 skill）
 package.json             # Node 依赖管理（commonjs，当前无运行时依赖）
 ```
+
+（※ = 衍生自 mattpocock/skills v1.2.3，全中文重写；mattpocock 系 skill 各含 `agents/openai.yaml` Codex 兼容文件，保持英文原样）
 
 无构建系统、无测试框架、无 lint 工具。项目是纯脚手架。
 
@@ -70,11 +102,12 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 ```text
 .claude-plugin/marketplace.json
   -> 声明 marketplace 元数据与插件 source: "./"
-  -> .claude-plugin/plugin.json 提供插件身份和安装版本
-  -> Claude Code 从 skills/、output-styles/、hooks/、monitors/ 发现插件能力
+  -> .claude-plugin/plugin.json 提供插件身份、安装版本，并以 skills 数组显式列出全部 skill 路径
+  -> Claude Code 从 plugin.json 的 skills 数组、output-styles/、hooks/、monitors/ 发现插件能力
 ```
 
-- `skills/<name>/SKILL.md` 的目录名与 frontmatter `name` 共同决定 skill 是否可被发现。
+- `skills/<分组>/<name>/SKILL.md`：skills/ 下按用途分组（git/process/grilling/engineering/productivity/writing/misc/project），frontmatter `name` 必须与最内层文件夹同名。
+- skill 路径必须在 `.claude-plugin/plugin.json` 的 `skills` 数组中显式登记（格式 `"./skills/<分组>/<name>"`），否则无法被发现——分组嵌套后不再依赖自动扫描。
 - `.claude-plugin/plugin.json` 的 `version` 与 `.claude-plugin/marketplace.json` 的 `metadata.version` 是发布版本事实来源，必须保持一致。
 - `package.json` 只记录仓库的 Node 元数据，不控制插件发布版本。
 
@@ -85,7 +118,7 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 node -e "const fs=require('fs'); for (const p of ['package.json','.claude-plugin/plugin.json','.claude-plugin/marketplace.json','hooks/hooks.json','monitors/monitors.json']) JSON.parse(fs.readFileSync(p,'utf8'))"
 
 # 检查仓库内 shell 脚本语法
-sh -n skills/brainstorming/scripts/start-server.sh skills/brainstorming/scripts/stop-server.sh skills/subagent-driven-development/scripts/review-package skills/subagent-driven-development/scripts/sdd-workspace skills/subagent-driven-development/scripts/task-brief
+sh -n skills/process/brainstorming/scripts/start-server.sh skills/process/brainstorming/scripts/stop-server.sh skills/process/subagent-driven-development/scripts/review-package skills/process/subagent-driven-development/scripts/sdd-workspace skills/process/subagent-driven-development/scripts/task-brief skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh skills/engineering/wizard/template.sh skills/git/git-guardrails-claude-code/scripts/block-dangerous-git.sh
 
 # 检查补丁中的空白错误
 git diff --check
@@ -94,7 +127,7 @@ git diff --check
 ## 开发规则
 
 - **提交前必须升级版本号**：每次 `git commit` 之前，先升级 `.claude-plugin/plugin.json` 中的 `version`（遵循语义化版本：新功能 minor、修复 patch、破坏性变更 major），并同步升级 `.claude-plugin/marketplace.json` 的 `metadata.version`（两处独立维护，需手动保持一致）。注意 `package.json` 的 `version` 是另一套独立编号，不参与插件发布。
-- **Skill 清单必须同步**：新增、删除或重命名 `skills/*` 时，同步更新 `skills/using-tuanzii/SKILL.md` 与本文件；若条目衍生自外部项目，还要同步对应 `NOTICE.<来源>.md`。
+- **Skill 清单必须同步**：新增、删除或重命名 `skills/*/*` 时，同步更新 `.claude-plugin/plugin.json` 的 `skills` 数组、`skills/process/using-tuanzii/SKILL.md` 与本文件；若条目衍生自外部项目，还要同步对应 `NOTICE.<来源>.md`。
 
 ## 环境特殊规范
 
@@ -115,7 +148,7 @@ git diff --check
 - `git commit` 前升级 `.claude-plugin/plugin.json` 的 `version`，并同步 `marketplace.json` 的 `metadata.version`（见「开发规则」）
 - 新增衍生自外部项目的内容时，创建/更新对应 `NOTICE.<来源>.md` 归属文件（照 `NOTICE.superpowers.md` 格式）
 - 修改 superpowers 衍生 skill 时，注解统一用 `【老王注】` 前缀（md 用 `> ` 引用块、脚本用对应注释语法），保持 `grep '【老王注】'` 可速览、`grep -v '【老王注】'` 可还原
-- skill 的 frontmatter `name:` 必须与所在文件夹同名（如 `skills/using-tuanzii/` 对应 `name: using-tuanzii`），否则 Claude Code 无法发现
+- skill 的 frontmatter `name:` 必须与所在文件夹同名（如 `skills/process/using-tuanzii/` 对应 `name: using-tuanzii`），否则 Claude Code 无法发现
 
 ### ⚠️ 需先询问
 
@@ -137,9 +170,9 @@ git diff --check
 
 ## Skills
 
-在根目录 `skills/` 下添加 skill，每个 skill 是一个文件夹，入口文件为 `SKILL.md`。
+在根目录 `skills/` 下按分组子目录组织 skill，每个 skill 是一个文件夹，入口文件为 `SKILL.md`，路径需在 `.claude-plugin/plugin.json` 的 `skills` 数组登记。
 
-### Git 工具（Skills）
+### Git 工具（skills/git/）
 
 | Skill | 功能 |
 |-------|------|
@@ -147,14 +180,11 @@ git diff --check
 | `git-rollback` | 交互式回滚：列分支→列版本→选模式（reset/revert）→二次确认，默认 dry-run |
 | `git-cleanBranches` | 安全清理已合并/过期分支，支持 dry-run、保护分支白名单、远程清理 |
 | `git-worktree` | Worktree 管理：智能路径、IDE 集成、内容迁移、环境文件自动复制 |
+| `resolving-merge-conflicts` ※ | 五步流程解决进行中的 merge/rebase 冲突 |
+| `git-guardrails-claude-code` ※ | 配置 Claude Code PreToolUse 钩子拦截危险 git 命令 |
+| `setup-pre-commit` ※ | 配置 Husky + lint-staged + Prettier 预提交钩子，串跑 typecheck 与测试 |
 
-### 项目上下文（Skills）
-
-| Skill | 功能 |
-|-------|------|
-| `deepinit` | 深度初始化 CLAUDE.md：替代内置 /init，覆盖架构分层/环境规范/三层边界/测试策略（自 tuanzi 项目迁入） |
-
-### 工程流程（Skills，衍生自 superpowers v6.0.3，MIT，见 NOTICE.superpowers.md）
+### 工程流程（skills/process/，衍生自 superpowers v6.0.3，MIT，见 NOTICE.superpowers.md）
 
 | Skill | 功能 |
 |-------|------|
@@ -170,20 +200,67 @@ git diff --check
 
 注：这组 skill 内部互相以 `tuanzii:<skill>` 引用，已与本插件自洽；`docs/superpowers/` 与 `.superpowers/` 路径沿用原版约定（本仓库已有对应目录）。除 `verification-before-completion` 已按当前工作流精简重写外，其余 Superpowers 衍生内容通过 `【老王注】` 旁注适配，保留上游英文原文；`grep '【老王注】'` 可速览这些旁注。
 
-### 写作辅助（Skills，衍生自 op7418/Humanizer-zh，MIT，见 NOTICE.humanizer-zh.md）
+### 追问与领域建模（skills/grilling/，衍生自 mattpocock/skills ※）
+
+| Skill | 功能 |
+|-------|------|
+| `grilling` | 连环追问核心引擎：design tree / frontier / 轮次机制，事实 sub-agent 自查、决策归用户（model-invoked） |
+| `grill-me` | `/grill-me` 入口：对计划或设计连环追问打磨（user-invoked） |
+| `grill-with-docs` | `/grill-with-docs` 入口：追问 + 同步沉淀 `CONTEXT.md` 词汇表与 ADR（user-invoked） |
+| `domain-modeling` | 领域建模：挑战术语、场景压力测试、就地维护 `CONTEXT.md` 和 `docs/adr/`（含格式文档） |
+
+### 工程流水线（skills/engineering/，衍生自 mattpocock/skills ※）
+
+| Skill | 功能 |
+|-------|------|
+| `ask-matt` | 不确定该用哪个 skill/流程时的路由入口 |
+| `codebase-design` | 深模块设计共享词汇库：接口设计、加深机会、接缝位置、可测试性 |
+| `code-review` | 双轴评审：规范符合度 + spec 符合度，并行 sub-agent 出报告 |
+| `diagnosing-bugs` | 疑难 bug / 性能回退的交互式诊断循环（含 HITL 脚本模板） |
+| `improve-codebase-architecture` | 扫描架构改进机会 → 可视化 HTML 报告 → 选一个追问打磨 |
+| `implement` | 按 spec 或工单集实现一块工作 |
+| `prototype` | 一次性原型：验证状态模型/逻辑手感或探索 UI 形态 |
+| `research` | 查高信任一手资料，结论落盘为 Markdown（可派后台 agent） |
+| `tdd` | 测试驱动开发实践（red-green-refactor，含 mocking/tests 专题文档） |
+| `to-spec` | 把当前对话综合成 spec 发布到 issue tracker（纯综合不采访） |
+| `to-tickets` | 计划/spec 拆成 tracer-bullet 工单，声明阻塞边并发布 |
+| `triage` | issue/外部 PR 状态机分诊：分类→验证→追问→写 agent 可执行简报 |
+| `wayfinder` | 超大规模工作规划：issue tracker 上的决策工单地图逐个消解 |
+| `wizard` | 生成交互式 bash 向导，引导人完成只有人能做的步骤（配密钥/开基础设施） |
+| `setup-matt-pocock-skills` | 工程流水线一次性初始化：issue tracker、分诊标签、文档布局 |
+
+流水线主线：`to-spec` → `to-tickets` → `triage` → `wayfinder` → `implement`，各环节可用 `grilling` 系压力测试，`codebase-design` 提供共享设计语言。首次使用前跑一次 `setup-matt-pocock-skills`。
+
+### 效率（skills/productivity/，衍生自 mattpocock/skills ※）
+
+| Skill | 功能 |
+|-------|------|
+| `handoff` | 把当前对话压缩成交接文档，让另一个 agent 接手 |
+| `teach` | 在工作区内教用户新技能/概念（含词汇表/学习记录等格式文档） |
+| `to-questionnaire` | 把答不全的决策变成问卷交给别人填 |
+| `wait-what` | 上一条消息没讲清时重新表达 |
+| `writing-for-agents` | 写给 agent 看的文档：创建/编辑 skill、AGENTS.md、CLAUDE.md 时用 |
+
+### 写作（skills/writing/，衍生自 op7418/Humanizer-zh，MIT，见 NOTICE.humanizer-zh.md）
 
 | Skill | 功能 |
 |-------|------|
 | `humanizer-zh` | 去除文本 AI 写作痕迹：24 种模式检测（AI 词汇/三段式/破折号滥用/模糊归因等）+ 改写示例 + 50 分制质量评分 |
 
-### 追问与领域建模（Skills，衍生自 mattpocock/skills，MIT，见 NOTICE.mattpocock-skills.md）
+### 杂项（skills/misc/，衍生自 mattpocock/skills ※）
 
 | Skill | 功能 |
 |-------|------|
-| `grilling` | 连环追问循环：一次一问打磨计划/决策，事实自查、决策归用户（model-invoked 核心引擎） |
-| `grill-me` | `/grill-me` 入口：对计划或设计进行刨根问底的追问（user-invoked） |
-| `grill-with-docs` | `/grill-with-docs` 入口：追问 + 同步沉淀 `CONTEXT.md` 词汇表与 ADR（user-invoked） |
-| `domain-modeling` | 领域建模：挑战术语、场景压力测试、就地维护 `CONTEXT.md` 和 `docs/adr/`（含格式文档） |
+| `migrate-to-shoehorn` | 测试里的 `as` 类型断言迁移到 @total-typescript/shoehorn |
+| `scaffold-exercises` | 课程练习目录脚手架（章节/题目/解答/讲解） |
+
+### 项目上下文（skills/project/）
+
+| Skill | 功能 |
+|-------|------|
+| `deepinit` | 深度初始化 CLAUDE.md：替代内置 /init，覆盖架构分层/环境规范/三层边界/测试策略 |
+
+※ = 衍生自 [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3（MIT，见 NOTICE.mattpocock-skills.md），共 29 个，均已全中文重写；frontmatter `name` 保持英文与文件夹同名，`agents/openai.yaml` 与脚本文件保持原样。功能重叠提示：`process/test-driven-development`（重纪律）与 `engineering/tdd`（重实践）并存；`process/systematic-debugging`（四阶段根因）与 `engineering/diagnosing-bugs`（交互式诊断环）并存。
 
 ## 输出风格（Output Styles）
 
@@ -199,5 +276,5 @@ git diff --check
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.4
-**最后更新**: 2026-08-11
+**版本**: v1.5
+**最后更新**: 2026-08-15
