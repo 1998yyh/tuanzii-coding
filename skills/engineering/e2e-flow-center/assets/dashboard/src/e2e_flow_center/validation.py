@@ -7,6 +7,8 @@ from typing import Any
 
 import yaml
 
+from .common import LIFECYCLE_STATUSES, enabled_issues, is_relative_path, is_text, review_issues
+
 
 FLOW_ID_RE = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 ENV_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
@@ -14,7 +16,6 @@ FIXTURE_KEY_RE = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 E2E_SPEC_RE = re.compile(r"^.+\.(?:e2e|spec)\.(?:[cm]?[jt]sx?)$")
 FLOW_SCHEMA_VERSION = 2
 PRIORITIES = {"P0", "P1", "P2", "P3"}
-STATUSES = {"draft", "ready", "active", "retired"}
 ACTIONS = {"navigate", "fill", "click", "select", "upload", "wait", "assert"}
 SIGNAL_KINDS = {"visible", "text", "url"}
 TARGET_ACTIONS = {"navigate", "fill", "click", "select", "upload"}
@@ -54,17 +55,6 @@ def _issue(issues: list[Issue], field_name: str, message: str) -> None:
     issues.append(Issue(field_name, message))
 
 
-def _is_string(value: Any) -> bool:
-    return isinstance(value, str) and bool(value.strip())
-
-
-def _safe_relative_path(value: Any) -> bool:
-    if not _is_string(value) or "\\" in value:
-        return False
-    path = PurePosixPath(value)
-    return not path.is_absolute() and ".." not in path.parts and str(path) not in {"", "."}
-
-
 def _contains_symlink(project_root: Path, path: Path) -> bool:
     """Reject every link in a writable path, including the final spec file."""
     try:
@@ -81,7 +71,7 @@ def _contains_symlink(project_root: Path, path: Path) -> bool:
 
 def _safe_e2e_test_spec_path(project_root: Path, value: Any) -> bool:
     """Only permit clearly named E2E specs, never arbitrary project files."""
-    if not _safe_relative_path(value):
+    if not is_relative_path(value):
         return False
     path = PurePosixPath(value)
     directories = path.parts[:-1]
@@ -162,27 +152,8 @@ def _validate_step_data(value: Any, env: dict[str, str], issues: list[Issue], pr
 
 
 def _validate_review(document: dict[str, Any], issues: list[Issue]) -> None:
-    review = document.get("review")
-    status = document.get("status")
-    if review is None:
-        if status in {"ready", "active"}:
-            _issue(issues, "review", f"status 为 {status} 时必须记录验收来源。")
-        return
-    if not isinstance(review, dict):
-        _issue(issues, "review", "必须是对象。")
-        return
-    mode, basis = review.get("mode"), review.get("basis")
-    if mode not in {"manual", "source-validated"}:
-        _issue(issues, "review.mode", "必须是 manual 或 source-validated。")
-        return
-    allowed_basis = {
-        "manual": {"pending-user-confirmation", "user-confirmed"},
-        "source-validated": {"source-evidence-and-schema-validation"},
-    }
-    if basis not in allowed_basis[mode]:
-        _issue(issues, "review.basis", "与 review.mode 的组合不合法。")
-    if status in {"ready", "active"} and basis == "pending-user-confirmation":
-        _issue(issues, "review.basis", "待人工确认的流程不能是 ready 或 active。")
+    for field_name, message in review_issues(document.get("review"), document.get("status")):
+        _issue(issues, field_name, message)
 
 
 def _validate_steps(steps: Any, env: dict[str, str], issues: list[Issue]) -> None:
@@ -196,21 +167,21 @@ def _validate_steps(steps: Any, env: dict[str, str], issues: list[Issue]) -> Non
             _issue(issues, prefix, "必须是对象。")
             continue
         step_id = step.get("id")
-        if not _is_string(step_id) or not FLOW_ID_RE.fullmatch(step_id):
+        if not is_text(step_id) or not FLOW_ID_RE.fullmatch(step_id):
             _issue(issues, f"{prefix}.id", "必须是小写 kebab-case。")
         elif step_id in step_ids:
             _issue(issues, f"{prefix}.id", "在同一流程中重复。")
         else:
             step_ids.add(step_id)
         for key in ("title", "expected"):
-            if not _is_string(step.get(key)):
+            if not is_text(step.get(key)):
                 _issue(issues, f"{prefix}.{key}", "必须是非空业务文本。")
         action = step.get("action")
         if action not in ACTIONS:
             _issue(issues, f"{prefix}.action", "不是受支持的业务动作。")
         if action in TARGET_ACTIONS:
             target = step.get("target")
-            if not isinstance(target, dict) or not _is_string(target.get("hint")):
+            if not isinstance(target, dict) or not is_text(target.get("hint")):
                 _issue(issues, f"{prefix}.target.hint", "此动作必须有面向人的定位说明。")
         if "data" in step:
             _validate_step_data(step["data"], env, issues, f"{prefix}.data")
@@ -219,12 +190,12 @@ def _validate_steps(steps: Any, env: dict[str, str], issues: list[Issue]) -> Non
             _issue(issues, f"{prefix}.signal", "必须含 visible、text 或 url 类型的可观察信号。")
             continue
         if signal["kind"] == "url":
-            if not _is_string(signal.get("value")):
+            if not is_text(signal.get("value")):
                 _issue(issues, f"{prefix}.signal.value", "url 信号必须有稳定路由或 URL。")
         else:
             locator = signal.get("locator")
             valid_locator = isinstance(locator, dict) and any(
-                _is_string(locator.get(key)) for key in ("role", "label", "testId", "text")
+                is_text(locator.get(key)) for key in ("role", "label", "testId", "text")
             )
             if not valid_locator:
                 _issue(issues, f"{prefix}.signal.locator", "必须有 role、label、testId 或 text 线索。")
@@ -238,28 +209,26 @@ def validate_document(document: Any, project_root: Path, path: str) -> list[Issu
     if document.get("schemaVersion") != FLOW_SCHEMA_VERSION:
         _issue(issues, "schemaVersion", f"当前必须为整数 {FLOW_SCHEMA_VERSION}。")
     flow_id = document.get("id")
-    if not _is_string(flow_id) or not FLOW_ID_RE.fullmatch(flow_id):
+    if not is_text(flow_id) or not FLOW_ID_RE.fullmatch(flow_id):
         _issue(issues, "id", "必须是小写 kebab-case。")
     elif path != f"e2e-flows/{flow_id}.yaml":
         _issue(issues, "id", "文件名必须与 id 一致，且使用 .yaml 后缀。")
     for key in required_text:
-        if not _is_string(document.get(key)):
+        if not is_text(document.get(key)):
             _issue(issues, key, "必须是非空文本。")
     if document.get("priority") not in PRIORITIES:
         _issue(issues, "priority", "必须为 P0、P1、P2 或 P3。")
-    if document.get("status") not in STATUSES:
+    if document.get("status") not in LIFECYCLE_STATUSES:
         _issue(issues, "status", "必须为 draft、ready、active 或 retired。")
-    if type(document.get("enabled")) is not bool:
-        _issue(issues, "enabled", "必须是布尔值。")
-    elif document.get("enabled") and document.get("status") != "active":
-        _issue(issues, "enabled", "只有 active 流程才可以启用。")
+    for message in enabled_issues(document.get("enabled"), document.get("status")):
+        _issue(issues, "enabled", message)
     _validate_review(document, issues)
 
     entry = document.get("entry")
     if not isinstance(entry, dict):
         _issue(issues, "entry", "必须是对象。")
     else:
-        if not _is_string(entry.get("url")):
+        if not is_text(entry.get("url")):
             _issue(issues, "entry.url", "必须是非空入口路由或 URL。")
         if type(entry.get("requiresAuth")) is not bool:
             _issue(issues, "entry.requiresAuth", "必须是布尔值。")
@@ -271,14 +240,14 @@ def validate_document(document: Any, project_root: Path, path: str) -> list[Issu
         _issue(issues, "paths", "必须是至少含一个项目相对 glob 的数组。")
     else:
         for index, value in enumerate(paths):
-            if not _safe_relative_path(value) or value == "**":
+            if not is_relative_path(value) or value == "**":
                 _issue(issues, f"paths[{index}]", "必须是有边界的项目相对 glob。")
     sources = document.get("sources")
     if not isinstance(sources, list) or not sources:
         _issue(issues, "sources", "必须是至少含一个真实来源文件的数组。")
     else:
         for index, value in enumerate(sources):
-            if not _safe_relative_path(value):
+            if not is_relative_path(value):
                 _issue(issues, f"sources[{index}]", "必须是项目相对文件路径。")
             elif not (project_root / value).is_file():
                 _issue(issues, f"sources[{index}]", "来源文件在项目中不存在。")
@@ -295,7 +264,7 @@ def validate_document(document: Any, project_root: Path, path: str) -> list[Issu
         _issue(issues, "test.spec", "标为 existing 的测试文件必须存在。")
     if "alwaysRunOnAffected" not in document or type(document.get("alwaysRunOnAffected")) is not bool:
         _issue(issues, "alwaysRunOnAffected", "必须是布尔值。")
-    if "tags" in document and (not isinstance(document["tags"], list) or not all(_is_string(tag) for tag in document["tags"])):
+    if "tags" in document and (not isinstance(document["tags"], list) or not all(is_text(tag) for tag in document["tags"])):
         _issue(issues, "tags", "若提供，必须是文本数组。")
     return issues
 

@@ -239,7 +239,7 @@ git diff --check
 
 | Skill | 功能 |
 |-------|------|
-| `e2e-flow-extract` | 从源码、路由、已有测试和产品文档抽离或维护端到端业务流程 YAML，并写审计报告 |
+| `e2e-flow-extract` | 从源码、路由、已有测试和产品文档抽离或维护端到端业务流程 YAML，并写审计报告；支持 manual / source-validated 双验收模式 |
 | `e2e-flow-center` | 完整校验 `e2e-flows/`，并从临时 localhost 看板查看流程与抽离报告 |
 | `e2e-test-gen` | 将已确认的 ready 流程转换为并验证 Playwright 测试；通过后推进为 active |
 | `e2e-evidence` | 运行 active 流程，归档截图、视频、Trace、HTML 报告与日志，并基于证据解释失败 |
@@ -289,5 +289,5 @@ git diff --check
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.6
-**最后更新**: 2026-08-16
+**版本**: v1.7
+**最后更新**: 2026-08-17

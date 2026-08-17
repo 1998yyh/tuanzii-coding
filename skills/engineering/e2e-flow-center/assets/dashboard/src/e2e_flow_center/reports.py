@@ -2,24 +2,27 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import json
 import re
 from typing import Any
+
+from .common import LIFECYCLE_STATUSES, enabled_issues, is_relative_path, is_text, review_issues
 
 
 REPORT_ID_RE = re.compile(r"^extract-\d{8}T\d{6}Z-[a-z0-9]{6,12}$")
 SCENARIOS = {
     "first-extraction",
+    "inventory",
     "added-flow",
     "changed-flow",
+    "goal-retired",
     "implementation-change",
     "unable-to-determine",
 }
-OPERATIONS = {"created", "semantic-updated", "provenance-updated", "unchanged"}
+OPERATIONS = {"created", "semantic-updated", "provenance-updated", "retired", "unchanged"}
 NEXT_ACTIONS = {"await-user-confirmation", "handoff-to-e2e-test-gen", "review-test-selectors", "no-action", "blocked"}
 BLOCKED_REASONS = {"awaiting-user-confirmation", "missing-source-evidence", "uncertain-business-semantics", "full-schema-validation-unavailable", "schema-validation-failed", "write-verification-failed"}
-LIFECYCLE_STATUSES = {"draft", "ready", "active", "retired"}
 
 
 @dataclass
@@ -48,23 +51,12 @@ class ReportRecord:
         }
 
 
-def _is_relative_path(value: Any) -> bool:
-    if not isinstance(value, str) or not value or "\\" in value:
-        return False
-    path = PurePosixPath(value)
-    return not path.is_absolute() and ".." not in path.parts
-
-
-def _is_text(value: Any) -> bool:
-    return isinstance(value, str) and bool(value.strip())
-
-
 def _is_positive_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
 
 def _is_utc_timestamp(value: Any) -> bool:
-    if not _is_text(value) or not value.endswith("Z"):
+    if not is_text(value) or not value.endswith("Z"):
         return False
     try:
         parsed = datetime.fromisoformat(value[:-1] + "+00:00")
@@ -80,34 +72,24 @@ def _lifecycle_errors(snapshot: Any, prefix: str) -> list[str]:
     status = snapshot.get("status")
     if status not in LIFECYCLE_STATUSES:
         errors.append(f"{prefix}.status 不合法。")
-    enabled = snapshot.get("enabled")
-    if type(enabled) is not bool:
-        errors.append(f"{prefix}.enabled 必须是布尔值。")
-    elif enabled and status != "active":
-        errors.append(f"{prefix}.enabled 只有 active 流程可以为 true。")
-
-    review = snapshot.get("review")
-    if status in {"ready", "active"} and not isinstance(review, dict):
-        errors.append(f"{prefix}.review 在 {status} 时必填。")
-        return errors
-    if review is None:
-        return errors
-    if not isinstance(review, dict):
-        errors.append(f"{prefix}.review 必须是对象。")
-        return errors
-    mode, basis = review.get("mode"), review.get("basis")
-    allowed_basis = {
-        "manual": {"pending-user-confirmation", "user-confirmed"},
-        "source-validated": {"source-evidence-and-schema-validation"},
-    }
-    if mode not in allowed_basis:
-        errors.append(f"{prefix}.review.mode 不合法。")
-        return errors
-    if basis not in allowed_basis[mode]:
-        errors.append(f"{prefix}.review.basis 与 mode 不匹配。")
-    if status in {"ready", "active"} and basis == "pending-user-confirmation":
-        errors.append(f"{prefix}.review.basis 不能让待确认流程处于 {status}。")
+    for message in enabled_issues(snapshot.get("enabled"), status):
+        errors.append(f"{prefix}.enabled {message}")
+    for field_name, message in review_issues(snapshot.get("review"), status):
+        errors.append(f"{prefix}.{field_name} {message}")
     return errors
+
+
+def _after_status(change: Any) -> Any:
+    """Dig out lifecycle.after.status without assuming any intermediate shape."""
+    if not isinstance(change, dict):
+        return None
+    lifecycle = change.get("lifecycle")
+    if not isinstance(lifecycle, dict):
+        return None
+    after = lifecycle.get("after")
+    if not isinstance(after, dict):
+        return None
+    return after.get("status")
 
 
 def _errors(document: Any, filename: str) -> list[str]:
@@ -129,11 +111,11 @@ def _errors(document: Any, filename: str) -> list[str]:
         errors.append("createdAt 必须是 UTC ISO-8601 时间。")
     scenarios = document.get("scenarios")
     if not isinstance(scenarios, list) or not scenarios or len(scenarios) != len(set(scenarios)) or not set(scenarios) <= SCENARIOS:
-        errors.append("scenarios 必须是非空、去重的五类分流枚举数组。")
+        errors.append("scenarios 必须是非空、去重的七类分流枚举数组。")
     if document.get("approvalMode") not in {"manual", "source-validated"}:
         errors.append("approvalMode 不合法。")
     validation = document.get("validation")
-    if not isinstance(validation, dict) or validation.get("level") not in {"full", "light", "unavailable"} or validation.get("status") not in {"passed", "failed", "not-run"} or not isinstance(validation.get("errors"), list) or not all(_is_text(item) for item in validation.get("errors", [])):
+    if not isinstance(validation, dict) or validation.get("level") not in {"full", "light", "unavailable"} or validation.get("status") not in {"passed", "failed", "not-run"} or not isinstance(validation.get("errors"), list) or not all(is_text(item) for item in validation.get("errors", [])):
         errors.append("validation 不合法。")
     summary = document.get("summary")
     if not isinstance(summary, dict) or not all(type(value) is int and value >= 0 for value in summary.values()):
@@ -183,7 +165,7 @@ def _errors(document: Any, filename: str) -> list[str]:
                     ready_ids.add(flow_id)
         flow = change.get("flow")
         required_flow_fields = ("name", "persona", "goal", "entryUrl", "successSignal")
-        if not isinstance(flow, dict) or any(not _is_text(flow.get(field)) for field in required_flow_fields):
+        if not isinstance(flow, dict) or any(not is_text(flow.get(field)) for field in required_flow_fields):
             errors.append(f"{prefix}.flow 缺少必填业务概览字段。")
         evidence = change.get("evidence")
         if not isinstance(evidence, list) or not evidence:
@@ -191,7 +173,7 @@ def _errors(document: Any, filename: str) -> list[str]:
         else:
             for evidence_index, item in enumerate(evidence):
                 evidence_prefix = f"{prefix}.evidence[{evidence_index}]"
-                if not isinstance(item, dict) or not _is_relative_path(item.get("path")) or not _is_text(item.get("reason")):
+                if not isinstance(item, dict) or not is_relative_path(item.get("path")) or not is_text(item.get("reason")):
                     errors.append(f"{evidence_prefix} 必须含项目相对路径和脱敏理由。")
                     continue
                 line_start, line_end = item.get("lineStart"), item.get("lineEnd")
@@ -204,13 +186,7 @@ def _errors(document: Any, filename: str) -> list[str]:
         elif isinstance(flow_id, str):
             actions_by_id[flow_id] = change["nextAction"]
     if isinstance(summary, dict):
-        after_statuses = [
-            change.get("lifecycle", {}).get("after", {}).get("status")
-            for change in changes
-            if isinstance(change, dict)
-            and isinstance(change.get("lifecycle"), dict)
-            and isinstance(change["lifecycle"].get("after"), dict)
-        ]
+        after_statuses = [status for status in (_after_status(change) for change in changes) if status is not None]
         expected = {
             "createdFlowCount": operations.count("created"),
             "semanticUpdatedFlowCount": operations.count("semantic-updated"),
@@ -222,6 +198,9 @@ def _errors(document: Any, filename: str) -> list[str]:
         for key, value in expected.items():
             if summary.get(key) != value:
                 errors.append(f"summary.{key} 与 flowChanges 不一致。")
+        # retiredFlowCount 是后加字段:旧报告缺省视为 0,保持向后兼容。
+        if summary.get("retiredFlowCount", 0) != operations.count("retired"):
+            errors.append("summary.retiredFlowCount 与 flowChanges 不一致。")
     if document.get("approvalMode") == "source-validated" and ready_ids and (
         not isinstance(validation, dict) or validation.get("level") != "full" or validation.get("status") != "passed"
     ):
@@ -259,10 +238,10 @@ def _errors(document: Any, filename: str) -> list[str]:
     else:
         for index, item in enumerate(coverage["covered"]):
             flow_ids = item.get("flowIds") if isinstance(item, dict) else None
-            if not isinstance(item, dict) or not _is_text(item.get("area")) or not _is_text(item.get("reason")) or not isinstance(flow_ids, list) or not all(isinstance(flow_id, str) for flow_id in flow_ids) or not set(flow_ids) <= ids:
+            if not isinstance(item, dict) or not is_text(item.get("area")) or not is_text(item.get("reason")) or not isinstance(flow_ids, list) or not all(isinstance(flow_id, str) for flow_id in flow_ids) or not set(flow_ids) <= ids:
                 errors.append(f"coverage.covered[{index}] 必须引用 flowChanges 中的流程。")
         for index, item in enumerate(coverage["uncovered"]):
-            if not isinstance(item, dict) or not _is_text(item.get("area")) or not _is_text(item.get("reason")) or not isinstance(item.get("evidencePaths", []), list) or any(not _is_relative_path(path) for path in item.get("evidencePaths", [])):
+            if not isinstance(item, dict) or not is_text(item.get("area")) or not is_text(item.get("reason")) or not isinstance(item.get("evidencePaths", []), list) or any(not is_relative_path(path) for path in item.get("evidencePaths", [])):
                 errors.append(f"coverage.uncovered[{index}] 只能包含脱敏说明和项目相对证据路径。")
     uncertainties = document.get("uncertainties")
     if not isinstance(uncertainties, list):
@@ -274,10 +253,10 @@ def _errors(document: Any, filename: str) -> list[str]:
             valid = (
                 isinstance(item, dict)
                 and item.get("severity") in {"info", "warning", "blocking"}
-                and _is_text(item.get("summary"))
-                and _is_text(item.get("question"))
+                and is_text(item.get("summary"))
+                and is_text(item.get("question"))
                 and isinstance(evidence_paths, list)
-                and all(_is_relative_path(path) for path in evidence_paths)
+                and all(is_relative_path(path) for path in evidence_paths)
                 and isinstance(blocked_ids, list)
                 and all(isinstance(flow_id, str) for flow_id in blocked_ids)
                 and set(blocked_ids) <= ids

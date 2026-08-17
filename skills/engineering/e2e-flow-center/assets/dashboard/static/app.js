@@ -1,8 +1,10 @@
 const $ = (selector) => document.querySelector(selector);
 const scenarioLabels = {
   "first-extraction": "首次抽离",
+  inventory: "已有流程盘点",
   "added-flow": "新增流程",
   "changed-flow": "原流程变更",
+  "goal-retired": "业务目标下线",
   "implementation-change": "纯实现变化",
   "unable-to-determine": "无法判断",
 };
@@ -10,6 +12,7 @@ const operationLabels = {
   created: "创建",
   "semantic-updated": "语义更新",
   "provenance-updated": "仅更新溯源",
+  retired: "下线",
   unchanged: "未修改",
 };
 
@@ -99,7 +102,7 @@ function renderReport(report) {
   header.append(element("p", report.id, "eyebrow"), element("h2", "抽离报告"), element("p", `${report.createdAt} · ${report.approvalMode} · ${report.validation.level}/${report.validation.status}`, "muted"));
   header.append(listText(report.scenarios, (scenario) => scenarioLabels[scenario] || scenario)); target.append(header);
   const summary = element("div", undefined, "report-grid");
-  summary.append(metric(report.summary.createdFlowCount, "创建"), metric(report.summary.semanticUpdatedFlowCount, "语义更新"), metric(report.summary.provenanceUpdatedFlowCount, "仅更新溯源"), metric(report.summary.readyFlowCount, "ready"), metric(report.summary.draftFlowCount, "draft"), metric(report.summary.blockedFlowCount, "阻塞")); target.append(summary);
+  summary.append(metric(report.summary.createdFlowCount, "创建"), metric(report.summary.semanticUpdatedFlowCount, "语义更新"), metric(report.summary.provenanceUpdatedFlowCount, "仅更新溯源"), metric(report.summary.retiredFlowCount ?? 0, "下线"), metric(report.summary.readyFlowCount, "ready"), metric(report.summary.draftFlowCount, "draft"), metric(report.summary.blockedFlowCount, "阻塞")); target.append(summary);
 
   const changes = element("section", undefined, "detail-section"); changes.append(element("h3", "流程变更"));
   if (!report.flowChanges.length) changes.append(element("p", "本次没有写入或更新流程。", "empty"));

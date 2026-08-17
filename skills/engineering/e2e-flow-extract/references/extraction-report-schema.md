@@ -34,6 +34,7 @@
     "semanticUpdatedFlowCount": 0,
     "provenanceUpdatedFlowCount": 0,
     "unchangedFlowCount": 0,
+    "retiredFlowCount": 0,
     "readyFlowCount": 0,
     "draftFlowCount": 0,
     "blockedFlowCount": 0
@@ -54,12 +55,14 @@
 | 值 | 含义 |
 |---|---|
 | `first-extraction` | 首次建立流程基线。 |
+| `inventory` | 已有流程盘点：只梳理覆盖、漂移和存疑，不改流程或生命周期。 |
 | `added-flow` | 在已有项目中确认了独立的新目标。 |
 | `changed-flow` | 已有流程的业务语义发生变化。 |
+| `goal-retired` | 业务目标下线：流程被设为 `status: retired` 保留为历史契约。 |
 | `implementation-change` | 只更新实现溯源或影响范围。 |
 | `unable-to-determine` | 缺少变更基线、源码证据或产品规则，不能安全判定或修改流程。 |
 
-`scenarios` 是非空、去重的上述枚举数组，记录本次分析实际涉及的每一种分流结果。一次调用可以同时包含新增流程、原流程改动和纯实现变化，因此不能用 `mixed` 这类笼统值掩盖差异。②页面将每个值分别展示；③据此区分需要重建业务测试的 `changed-flow`、只需复核选择器的 `implementation-change`，以及绝不可移交的 `unable-to-determine`。
+`scenarios` 是非空、去重的上述枚举数组，记录本次分析实际涉及的每一种分流结果。一次调用可以同时包含新增流程、原流程改动和纯实现变化，因此不能用 `mixed` 这类笼统值掩盖差异。②页面将每个值分别展示；③据此区分需要重建业务测试的 `changed-flow`、只需复核选择器的 `implementation-change`，以及绝不可移交的 `unable-to-determine`。`inventory` 与 `goal-retired` 同样不移交③：盘点不改流程，下线流程保持停用。
 
 当某个候选因无法判断而未修改流程时，必须包含 `unable-to-determine`，并在 `uncertainties` 中写明证据、问题和阻塞原因。`unable-to-determine` 不得让任何对应候选进入 `handoff.e2eTestGen.readyFlowIds`。
 
@@ -79,12 +82,13 @@
 - `semanticUpdatedFlowCount`：operation 为 `semantic-updated` 的数量。
 - `provenanceUpdatedFlowCount`：operation 为 `provenance-updated` 的数量。
 - `unchangedFlowCount`：operation 为 `unchanged` 的数量。
+- `retiredFlowCount`：operation 为 `retired` 的数量。该字段为后加：校验时旧报告缺省视为 `0`，新报告必须显式写入。
 - `readyFlowCount` 和 `draftFlowCount`：本次受影响流程写入后的状态数量。
 - `blockedFlowCount`：`handoff.e2eTestGen.blockedFlows` 的数量。
 
 ### `flowChanges`
 
-每项代表本次分析涉及的一条流程。`flowChanges` 可以为空，但报告必须改用 `coverage.uncovered` 或 `uncertainties` 说明原因。
+每项代表本次分析涉及的一条流程。`flowChanges` 可以为空，但报告必须改用 `coverage.uncovered` 或 `uncertainties` 说明原因。`inventory` 盘点调用通常不改流程：`flowChanges` 为空或全部为 `unchanged`，盘点结论写入 `coverage` 与 `uncertainties`。
 
 ```json
 {
@@ -125,7 +129,7 @@
 |---|---|---|
 | `flowId` | string | 对应 YAML 的 id。 |
 | `flowPath` | string | 必须为 `e2e-flows/<flow-id>.yaml`。 |
-| `operation` | string | `created`、`semantic-updated`、`provenance-updated` 或 `unchanged`。 |
+| `operation` | string | `created`、`semantic-updated`、`provenance-updated`、`retired` 或 `unchanged`。`retired` 表示业务目标下线：`lifecycle.before` 必填，`lifecycle.after` 为 `status: retired`、`enabled: false`。 |
 | `lifecycle.before` | object / null | 新流程为 `null`；否则记录分析前的 `status`、`enabled`、`review`。 |
 | `lifecycle.after` | object | 记录写入后的 `status`、`enabled`、`review`。 |
 | `flow` | object | 面向页面展示的脱敏业务概览：`name`、`persona`、`goal`、`entryUrl`、`successSignal` 均必填。 |

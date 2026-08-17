@@ -167,7 +167,7 @@ python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
 1. 以 `assets/example-extraction-report.json` 和 `references/extraction-report-schema.md` 为字段基线，创建一个 `schemaVersion: 1` 的报告。
 2. 生成不会冲突的报告 id：`extract-<UTC时间戳>-<随机短后缀>`，例如 `extract-20260813T074531Z-a1b2c3`；写入 `e2e-flow-reports/<report-id>.json`。不要维护或覆盖 `latest.json`。
 3. 使用临时文件写入后原子替换为最终文件，避免②读到半截 JSON。报告 JSON 一经写入不可修改；后续抽离创建新快照。
-4. `scenarios` 必须逐项记录本次实际命中的分流类别：`first-extraction`、`added-flow`、`changed-flow`、`implementation-change`、`unable-to-determine`。一次调用命中多类时使用去重数组，不使用笼统的 `mixed`；无法判断的候选必须同时写入 `uncertainties`，且不得移交③。
+4. `scenarios` 必须逐项记录本次实际命中的分流类别，与「开始前的分流」一一对应：`first-extraction`（首次抽离）、`inventory`（已有流程盘点）、`added-flow`（旧项目新增流程）、`changed-flow`（原流程有改动）、`goal-retired`（业务目标下线）、`implementation-change`（纯实现变化）、`unable-to-determine`（无法判断）。一次调用命中多类时使用去重数组，不使用笼统的 `mixed`；无法判断的候选必须同时写入 `uncertainties`，且不得移交③。
 5. 每一条流程变更都记录 operation、变更前后生命周期、业务概览、源码证据和下一步动作；同时记录覆盖区域、未覆盖区域、存疑项、校验结果及③的移交清单。
 6. 报告只能保存项目相对路径和脱敏说明，不能保存源码全文、真实凭据、token、Cookie、完整用户输入或绝对机器路径。
 7. 如果本次没有创建或更新流程，仍写一份报告，使用空 `flowChanges` 和明确的 `uncovered` / `uncertainties` 原因。这能让页面说明“为什么没有结果”。
@@ -191,7 +191,7 @@ python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
 
 | 流程 | 操作 | 状态 | 证据 |
 |---|---|---|---|
-| <id> | 创建 / 语义更新 / 仅更新溯源 / 未修改 | <status, enabled, review.basis> | <关键 sources> |
+| <id> | 创建 / 语义更新 / 仅更新溯源 / 下线 / 未修改 | <status, enabled, review.basis> | <关键 sources> |
 
 ## 流程概览
 

@@ -1,4 +1,7 @@
 interface:
-  display_name: "E2E 测试生成"
-  short_description: "将流程 YAML 转为并验证 Playwright 测试"
-  default_prompt: "Use $e2e-test-gen to generate and verify Playwright tests for ready E2E flows."
+  display_name: E2E 测试生成
+  short_description: 将流程 YAML 转为并验证 Playwright 测试
+  default_prompt: 为 e2e-flows/ 中已就绪的流程生成并验证 Playwright 测试。
+
+policy:
+  allow_implicit_invocation: true

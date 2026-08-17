@@ -1,6 +1,6 @@
 ---
 name: e2e-flow-center
-description: 为已有 e2e-flows/ 的项目按需启动临时、本机的 E2E 流程看板，查看流程状态、Git 影响范围和 e2e-flow-reports/ 抽离报告，或运行完整流程 Schema 校验时使用。用户提到“打开流程看板”“可视化流程”“看抽离报告”“哪些流程受影响”“校验 e2e-flows”时应使用。看板只读项目数据，绝不在目标项目安装 Web 应用、修改 YAML 或改 package.json；需要抽离流程时移交 e2e-flow-extract，需要写测试时移交 e2e-test-gen，需要运行或排障时移交 e2e-evidence。
+description: 为已有 e2e-flows/ 的项目按需启动临时、本机的 E2E 流程看板，查看流程状态、影响路径和 e2e-flow-reports/ 抽离报告，或运行完整流程 Schema 校验时使用。用户提到“打开流程看板”“可视化流程”“看抽离报告”“哪些流程受影响”“校验 e2e-flows”时应使用。看板只读项目数据，绝不在目标项目安装 Web 应用、修改 YAML 或改 package.json；需要抽离流程时移交 e2e-flow-extract，需要写测试时移交 e2e-test-gen，需要运行或排障时移交 e2e-evidence。
 ---
 
 # E2E Flow Center
@@ -52,10 +52,10 @@ python3 scripts/start_dashboard.py --project <target-project-root>
 看板提供：
 
 - 流程目录：状态、类别、是否启用、Schema 错误、来源和影响路径。
-- 抽离报告：`/reports/extraction` 展示 `e2e-flow-reports/*.json`，并逐项展示 `scenarios` 中的五种分流结果；不能把纯实现变化或无法判断折叠成业务变更。
+- 抽离报告：`/reports/extraction` 展示 `e2e-flow-reports/*.json`，并逐项展示 `scenarios` 中的七种分流结果；不能把纯实现变化或无法判断折叠成业务变更。
 - 报告详情：流程前后生命周期、证据路径与理由、覆盖/存疑和对③的移交。无效报告仅显示文件名与脱敏错误。
 
-服务端只提供 `GET /api/health`、`GET /api/flows`、`GET /api/extraction-reports` 和 `GET /api/extraction-reports/<report-id>`。最后一个接口只接受契约规定的 report id，绝不接受任意文件路径。当前版本的运行按钮只作为④的会话入口；②自身不直接执行项目命令。
+服务端只提供 `GET /api/health`、`GET /api/flows`、`GET /api/extraction-reports` 和 `GET /api/extraction-reports/<report-id>`。最后一个接口只接受契约规定的 report id，绝不接受任意文件路径。②自身不提供运行入口，也不直接执行项目命令；运行、重跑或排障一律移交④。
 
 ## 关闭与清理
 

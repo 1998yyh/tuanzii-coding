@@ -33,27 +33,25 @@ def create_app() -> FastAPI:
         if not hmac.compare_digest(supplied, token):
             raise HTTPException(status_code=403, detail="当前会话未获授权。请使用启动命令输出的 URL。")
 
-    @app.get("/", include_in_schema=False)
-    def page(request: Request, access_token: str | None = Query(default=None, alias="token")):
+    def page_response(request: Request, access_token: str | None, redirect_url: str) -> FileResponse | RedirectResponse:
+        # Exchange a one-time URL token for an HttpOnly session cookie, then serve the page.
         if access_token and hmac.compare_digest(access_token, token):
-            response = RedirectResponse(url="/", status_code=303)
+            response = RedirectResponse(url=redirect_url, status_code=303)
             response.set_cookie(COOKIE_NAME, token, httponly=True, samesite="strict", secure=False)
             return response
         if not hmac.compare_digest(request.cookies.get(COOKIE_NAME, ""), token):
             raise HTTPException(status_code=403, detail="当前会话未获授权。请使用启动命令输出的 URL。")
         return FileResponse(static_dir / "index.html")
 
+    @app.get("/", include_in_schema=False)
+    def page(request: Request, access_token: str | None = Query(default=None, alias="token")):
+        return page_response(request, access_token, "/")
+
     @app.get("/reports/extraction", include_in_schema=False)
     def report_page(request: Request, access_token: str | None = Query(default=None, alias="token"), report: str | None = None):
         # Preserve a direct report link while using the same token-to-cookie exchange as the home route.
-        if access_token and hmac.compare_digest(access_token, token):
-            suffix = f"?report={report}" if report else ""
-            response = RedirectResponse(url=f"/reports/extraction{suffix}", status_code=303)
-            response.set_cookie(COOKIE_NAME, token, httponly=True, samesite="strict", secure=False)
-            return response
-        if not hmac.compare_digest(request.cookies.get(COOKIE_NAME, ""), token):
-            raise HTTPException(status_code=403, detail="当前会话未获授权。请使用启动命令输出的 URL。")
-        return FileResponse(static_dir / "index.html")
+        suffix = f"?report={report}" if report else ""
+        return page_response(request, access_token, f"/reports/extraction{suffix}")
 
     @app.get("/api/health")
     def health(_: None = Depends(authorized)):

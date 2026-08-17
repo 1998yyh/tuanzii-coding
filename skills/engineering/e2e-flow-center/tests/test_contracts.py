@@ -135,16 +135,59 @@ class ContractTests(unittest.TestCase):
             self.assertFalse(records[0].valid)
             self.assertTrue(any(issue.field.endswith(".id") for issue in records[0].issues))
 
-    def test_report_uses_five_way_scenario_contract(self) -> None:
+    def test_report_uses_seven_way_scenario_contract(self) -> None:
         temp, root = self.report_root()
         with temp:
             example = self.example_report()
             self.write_report(root, example)
-            records = load_reports(root)
+            self.assertTrue(records := load_reports(root), "示例报告应被加载")
             self.assertTrue(records[0].valid, records[0].errors)
             example["scenarios"] = ["mixed"]
             self.write_report(root, example)
             self.assertFalse(load_reports(root)[0].valid)
+            for scenario in ("inventory", "goal-retired"):
+                example["scenarios"] = [scenario]
+                self.write_report(root, example)
+                self.assertTrue(load_reports(root)[0].valid, scenario)
+
+    def test_report_retired_operation_contract(self) -> None:
+        def retire_report() -> dict:
+            report = deepcopy(self.example_report())
+            report["scenarios"] = ["goal-retired"]
+            change = report["flowChanges"][0]
+            change["operation"] = "retired"
+            change["lifecycle"] = {
+                "before": {
+                    "status": "ready",
+                    "enabled": False,
+                    "review": {"mode": "manual", "basis": "user-confirmed"},
+                },
+                "after": {"status": "retired", "enabled": False},
+            }
+            change["nextAction"] = "no-action"
+            report["summary"].update(createdFlowCount=0, retiredFlowCount=1, readyFlowCount=0, draftFlowCount=0, blockedFlowCount=0)
+            report["handoff"]["e2eTestGen"] = {"readyFlowIds": [], "blockedFlows": []}
+            return report
+
+        temp, root = self.report_root()
+        with temp:
+            self.write_report(root, retire_report())
+            self.assertTrue(records := load_reports(root), "retire 报告应被加载")
+            self.assertTrue(records[0].valid, records[0].errors)
+
+            wrong_count = retire_report()
+            wrong_count["summary"]["retiredFlowCount"] = 2
+            self.write_report(root, wrong_count)
+            self.assertFalse(load_reports(root)[0].valid)
+
+    def test_legacy_report_without_retired_count_stays_valid(self) -> None:
+        temp, root = self.report_root()
+        with temp:
+            legacy = deepcopy(self.example_report())
+            legacy["summary"].pop("retiredFlowCount")
+            self.write_report(root, legacy)
+            self.assertTrue(records := load_reports(root), "旧格式报告应被加载")
+            self.assertTrue(records[0].valid, records[0].errors)
 
     def test_report_rejects_parent_path(self) -> None:
         temp, root = self.report_root()

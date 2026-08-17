@@ -1,3 +1,4 @@
 node_modules/
 settings.json
 .reasonix/
+__pycache__/

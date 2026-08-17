@@ -61,4 +61,4 @@ description: 运行已激活的 Playwright E2E 流程，配置或核验截图、
 
 - 流程语义、入口、步骤或信号不正确：移交① `e2e-flow-extract`。
 - spec、locator、fixture 或 Playwright 测试实现需要修复：移交③ `e2e-test-gen`。
-- 用户要查看看板、流程目录或结果关联：移交② `e2e-flow-center`。
+- 用户要查看看板、流程目录或抽离报告：移交② `e2e-flow-center`。

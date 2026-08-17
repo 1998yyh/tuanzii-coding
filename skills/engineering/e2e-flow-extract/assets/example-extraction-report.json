@@ -14,6 +14,7 @@
     "semanticUpdatedFlowCount": 0,
     "provenanceUpdatedFlowCount": 0,
     "unchangedFlowCount": 0,
+    "retiredFlowCount": 0,
     "readyFlowCount": 0,
     "draftFlowCount": 1,
     "blockedFlowCount": 1
