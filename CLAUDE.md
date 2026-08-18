@@ -19,7 +19,7 @@ claude plugin install tuanzii@tuanzii
 
 ```
 .claude-plugin/
-  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 48 个 skill 路径
+  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 41 个 skill 路径
   marketplace.json       # 本地 marketplace 清单（新版 Claude Code 市场规范要求，含独立 metadata.version）
 skills/                  # Skills 目录，按用途分组子目录，每个 skill 一个文件夹，入口为 SKILL.md
   git/                   # Git 工具（7 个）
@@ -30,16 +30,8 @@ skills/                  # Skills 目录，按用途分组子目录，每个 ski
     resolving-merge-conflicts/  # 解决 merge/rebase 冲突 ※
     git-guardrails-claude-code/ # 钩子拦截危险 git 命令 ※
     setup-pre-commit/    # Husky + lint-staged 预提交钩子 ※
-  process/               # 工程流程（9 个，衍生自 obra/superpowers v6.0.3，MIT，见 NOTICE.superpowers.md）
-    brainstorming/       # 需求探索 → 设计文档
-    subagent-driven-development/  # subagent 逐任务实现 + 评审（含 scripts/、prompt 模板）
-    finishing-a-development-branch/  # 分支收尾
-    using-git-worktrees/ # 隔离工作区
-    test-driven-development/  # TDD 铁律
-    systematic-debugging/  # 四阶段根因调试（含辅助脚本/技术文档）
-    verification-before-completion/  # 完成声明前的证据门禁
-    dispatching-parallel-agents/  # 并行派 agent
-    using-tuanzii/       # Skill 路由元规则（含各平台 references/）
+  process/               # 工程流程（1 个，衍生自 obra/superpowers v6.0.3，MIT，见 NOTICE.superpowers.md）
+    brainstorming/       # 需求探索 → 设计文档（disable-model-invocation，仅用户显式触发）
   grilling/              # 追问与领域建模（4 个，衍生自 mattpocock/skills，MIT，见 NOTICE.mattpocock-skills.md）
     grilling/            # 连环追问核心引擎（design tree / frontier 机制）
     grill-me/            # /grill-me 入口（user-invoked）
@@ -89,11 +81,10 @@ hooks/
   hooks.json             # Claude Code 钩子声明（当前无注册钩子）
 monitors/
   monitors.json          # 监控配置（当前为空数组）
-docs/
-  superpowers/           # superpowers 流程产物（plans/ 实施计划、specs/ 设计文档）
 NOTICE.superpowers.md    # superpowers 衍生内容归属（MIT, Jesse Vincent）
 NOTICE.humanizer-zh.md   # humanizer-zh 衍生内容归属（MIT, 歸藏）
 NOTICE.mattpocock-skills.md  # mattpocock/skills 衍生内容归属（MIT, Matt Pocock，共 29 个 skill）
+changelog.md             # 插件版本变更日志（版本事实来源仍是两个清单，此处只做登记）
 package.json             # Node 依赖管理（commonjs，当前无运行时依赖）
 ```
 
@@ -122,7 +113,7 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 node -e "const fs=require('fs'); for (const p of ['package.json','.claude-plugin/plugin.json','.claude-plugin/marketplace.json','hooks/hooks.json','monitors/monitors.json']) JSON.parse(fs.readFileSync(p,'utf8'))"
 
 # 检查仓库内 shell 脚本语法
-sh -n skills/process/brainstorming/scripts/start-server.sh skills/process/brainstorming/scripts/stop-server.sh skills/process/subagent-driven-development/scripts/review-package skills/process/subagent-driven-development/scripts/sdd-workspace skills/process/subagent-driven-development/scripts/task-brief skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh skills/engineering/wizard/template.sh skills/git/git-guardrails-claude-code/scripts/block-dangerous-git.sh
+sh -n skills/process/brainstorming/scripts/start-server.sh skills/process/brainstorming/scripts/stop-server.sh skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh skills/engineering/wizard/template.sh skills/git/git-guardrails-claude-code/scripts/block-dangerous-git.sh
 
 # 检查补丁中的空白错误
 git diff --check
@@ -130,8 +121,8 @@ git diff --check
 
 ## 开发规则
 
-- **提交前必须升级版本号**：每次 `git commit` 之前，先升级 `.claude-plugin/plugin.json` 中的 `version`（遵循语义化版本：新功能 minor、修复 patch、破坏性变更 major），并同步升级 `.claude-plugin/marketplace.json` 的 `metadata.version`（两处独立维护，需手动保持一致）。注意 `package.json` 的 `version` 是另一套独立编号，不参与插件发布。
-- **Skill 清单必须同步**：新增、删除或重命名 `skills/*/*` 时，同步更新 `.claude-plugin/plugin.json` 的 `skills` 数组、`skills/process/using-tuanzii/SKILL.md` 与本文件；若条目衍生自外部项目，还要同步对应 `NOTICE.<来源>.md`。
+- **提交前必须升级版本号**：每次 `git commit` 之前，先升级 `.claude-plugin/plugin.json` 中的 `version`（遵循语义化版本：新功能 minor、修复 patch、破坏性变更 major），并同步升级 `.claude-plugin/marketplace.json` 的 `metadata.version`（两处独立维护，需手动保持一致），同时在 `changelog.md` 顶部登记对应版本条目。注意 `package.json` 的 `version` 是另一套独立编号，不参与插件发布。
+- **Skill 清单必须同步**：新增、删除或重命名 `skills/*/*` 时，同步更新 `.claude-plugin/plugin.json` 的 `skills` 数组与本文件；若条目衍生自外部项目，还要同步对应 `NOTICE.<来源>.md`。
 
 ## 环境特殊规范
 
@@ -152,7 +143,7 @@ git diff --check
 - `git commit` 前升级 `.claude-plugin/plugin.json` 的 `version`，并同步 `marketplace.json` 的 `metadata.version`（见「开发规则」）
 - 新增衍生自外部项目的内容时，创建/更新对应 `NOTICE.<来源>.md` 归属文件（照 `NOTICE.superpowers.md` 格式）
 - 修改 superpowers 衍生 skill 时，注解统一用 `【老王注】` 前缀（md 用 `> ` 引用块、脚本用对应注释语法），保持 `grep '【老王注】'` 可速览、`grep -v '【老王注】'` 可还原
-- skill 的 frontmatter `name:` 必须与所在文件夹同名（如 `skills/process/using-tuanzii/` 对应 `name: using-tuanzii`），否则 Claude Code 无法发现
+- skill 的 frontmatter `name:` 必须与所在文件夹同名（如 `skills/process/brainstorming/` 对应 `name: brainstorming`），否则 Claude Code 无法发现
 
 ### ⚠️ 需先询问
 
@@ -192,17 +183,9 @@ git diff --check
 
 | Skill | 功能 |
 |-------|------|
-| `brainstorming` | 需求探索：一次一问澄清意图 → 2-3 方案 → 设计文档落盘，未批准禁动手 |
-| `subagent-driven-development` | 每任务派 fresh subagent 实现 + 规格/质量双评审 + 进度账本抗压缩 |
-| `finishing-a-development-branch` | 分支收尾：验证测试，给合并/PR/清理选项 |
-| `using-git-worktrees` | 开始特性工作前确保隔离工作区 |
-| `test-driven-development` | TDD 铁律：无失败测试禁写实现，含反借口表与红旗清单 |
-| `systematic-debugging` | 四阶段调试：根因优先禁瞎修；连续 3 次修复失败熔断，转质疑架构 |
-| `verification-before-completion` | 完成声明前的证据门禁：按结论选择充分检查，并披露未验证项 |
-| `dispatching-parallel-agents` | 2+ 独立问题域并行派 agent，含 prompt 四要素 |
-| `using-tuanzii` | Skill 路由元规则：1% 可能适用即调用，process skill 优先 |
+| `brainstorming` | 需求探索：一次一问澄清意图 → 2-3 方案 → 设计文档落盘，未批准禁动手（`disable-model-invocation: true`，仅用户显式 `/tuanzii:brainstorming` 触发，模型不得默认调用） |
 
-注：这组 skill 内部互相以 `tuanzii:<skill>` 引用，已与本插件自洽；`docs/superpowers/` 与 `.superpowers/` 路径沿用原版约定（本仓库已有对应目录）。除 `verification-before-completion` 已按当前工作流精简重写外，其余 Superpowers 衍生内容通过 `【老王注】` 旁注适配，保留上游英文原文；`grep '【老王注】'` 可速览这些旁注。
+注：原同组的另外 8 个 superpowers 衍生 skill 已于 v4.0.0 移除（含路由元规则 `using-tuanzii`），`docs/superpowers/` 流程产物目录一并清空。`brainstorming` 通过 `【老王注】` 旁注适配并保留上游英文原文；`grep '【老王注】'` 可速览这些旁注。`brainstorming` 的设计文档落盘路径仍为 `docs/superpowers/specs/`，运行时自建目录，仓库不再预置。
 
 ### 追问与领域建模（skills/grilling/，衍生自 mattpocock/skills ※）
 
@@ -240,7 +223,7 @@ git diff --check
 | Skill | 功能 |
 |-------|------|
 | `e2e-flow-extract` | 从源码、路由、已有测试和产品文档抽离或维护端到端业务流程 YAML，并写审计报告；支持 manual / source-validated 双验收模式 |
-| `e2e-flow-center` | 完整校验 `e2e-flows/`，并从临时 localhost 看板查看流程与抽离报告 |
+| `e2e-flow-center` | 完整校验 `e2e-flows/`，并从临时 localhost 三栏看板查看流程详情、Git 影响徽章、运行历史与证据中心，及抽离报告 |
 | `e2e-test-gen` | 将已确认的 ready 流程转换为并验证 Playwright 测试；通过后推进为 active |
 | `e2e-evidence` | 运行 active 流程，归档截图、视频、Trace、HTML 报告与日志，并基于证据解释失败 |
 
@@ -273,7 +256,7 @@ git diff --check
 |-------|------|
 | `deepinit` | 深度初始化 CLAUDE.md：替代内置 /init，覆盖架构分层/环境规范/三层边界/测试策略 |
 
-※ = 衍生自 [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3（MIT，见 NOTICE.mattpocock-skills.md），共 29 个，均已全中文重写；frontmatter `name` 保持英文与文件夹同名，`agents/openai.yaml` 与脚本文件保持原样。功能重叠提示：`process/test-driven-development`（重纪律）与 `engineering/tdd`（重实践）并存；`process/systematic-debugging`（四阶段根因）与 `engineering/diagnosing-bugs`（交互式诊断环）并存。
+※ = 衍生自 [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3（MIT，见 NOTICE.mattpocock-skills.md），共 29 个，均已全中文重写；frontmatter `name` 保持英文与文件夹同名，`agents/openai.yaml` 与脚本文件保持原样。
 
 ## 输出风格（Output Styles）
 
@@ -289,5 +272,5 @@ git diff --check
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.7
-**最后更新**: 2026-08-17
+**版本**: v1.9
+**最后更新**: 2026-08-18

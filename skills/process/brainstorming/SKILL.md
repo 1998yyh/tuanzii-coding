@@ -1,6 +1,7 @@
 ---
 name: brainstorming
 description: "任何创造性工作之前必须使用：创建功能、构建组件、增加能力或修改行为。在实现前探索用户意图、需求和设计。"
+disable-model-invocation: true
 ---
 
 # 将想法梳理为设计

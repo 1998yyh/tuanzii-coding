@@ -7,6 +7,7 @@ from typing import Any
 
 import yaml
 
+from .affected import flow_impact, git_changed_paths
 from .common import LIFECYCLE_STATUSES, enabled_issues, is_relative_path, is_text, review_issues
 
 
@@ -46,7 +47,8 @@ class FlowRecord:
         return {
             "path": self.path,
             "valid": self.valid,
-            "flow": flow_view(self.document) if self.document else None,
+            # 非 dict 的 YAML（列表/标量）也是合法的"无效文件"，必须展示错误而不是炸掉载荷
+            "flow": flow_view(self.document) if isinstance(self.document, dict) else None,
             "issues": [asdict(issue) for issue in self.issues],
         }
 
@@ -285,19 +287,49 @@ def load_flows(project_root: Path) -> list[FlowRecord]:
     return records
 
 
+def _step_view(step: Any) -> dict[str, Any] | None:
+    """Business-facing step summary; data, targets and locators never leave the server."""
+    if not isinstance(step, dict):
+        return None
+    return {"id": step.get("id"), "title": step.get("title"), "expected": step.get("expected")}
+
+
 def flow_view(document: dict[str, Any]) -> dict[str, Any]:
     """Expose a dashboard-safe summary; fixtures and step data never leave the server."""
     fields = ("id", "name", "description", "category", "persona", "goal", "priority", "status", "enabled", "entry", "paths", "sources", "test", "tags")
-    return {key: document.get(key) for key in fields}
+    view = {key: document.get(key) for key in fields}
+    view["steps"] = [
+        step_view
+        for step in document.get("steps") or []
+        if (step_view := _step_view(step)) is not None
+    ]
+    return view
+
+
+def flow_counts(records: list[FlowRecord]) -> tuple[int, int]:
+    """(valid, invalid) counts shared by the payload and the health endpoint."""
+    valid = sum(record.valid for record in records)
+    return valid, len(records) - valid
 
 
 def validation_payload(project_root: Path) -> dict[str, Any]:
     records = load_flows(project_root)
-    valid = sum(record.valid for record in records)
+    valid, invalid = flow_counts(records)
+    changed_paths, git_available = git_changed_paths(project_root)
+    flows: list[dict[str, Any]] = []
+    for record in records:
+        view = record.to_dict()
+        if isinstance(record.document, dict):
+            affected, reasons = flow_impact(record.document, changed_paths)
+            view["affected"] = affected
+            view["reasons"] = reasons
+        flows.append(view)
     return {
         "project": str(project_root),
         "flowDirectoryExists": (project_root / "e2e-flows").is_dir(),
         "validFlowCount": valid,
-        "invalidFlowCount": len(records) - valid,
-        "flows": [record.to_dict() for record in records],
+        "invalidFlowCount": invalid,
+        "flows": flows,
+        "changedPaths": changed_paths,
+        "gitAvailable": git_available,
     }

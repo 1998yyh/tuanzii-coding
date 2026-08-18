@@ -1,10 +1,10 @@
 # Attribution: superpowers
 
-本仓库 `skills/` 目录下的以下 9 个 skill 衍生自 [obra/superpowers](https://github.com/obra/superpowers)（v6.0.3）：
+本仓库 `skills/` 目录下的以下 1 个 skill 衍生自 [obra/superpowers](https://github.com/obra/superpowers)（v6.0.3）：
 
-`brainstorming`, `dispatching-parallel-agents`, `finishing-a-development-branch`, `subagent-driven-development`, `systematic-debugging`, `test-driven-development`, `using-git-worktrees`, `using-superpowers`, `verification-before-completion`
+`brainstorming`
 
-注：上游的 `using-superpowers` 在本项目中已更名为 `using-tuanzii`（内容已按本插件适配）。
+注：原同组另外 8 个衍生 skill（`dispatching-parallel-agents`、`finishing-a-development-branch`、`subagent-driven-development`、`systematic-debugging`、`test-driven-development`、`using-git-worktrees`、`using-superpowers`/`using-tuanzii`、`verification-before-completion`）已于 v4.0.0 移除，历史版本归属见 git 历史。
 
 原项目以 MIT License 发布，原作者为 Jesse Vincent。许可原文如下：
 

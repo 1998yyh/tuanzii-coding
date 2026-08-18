@@ -9,34 +9,89 @@
   <body>
     <a class="skip-link" href="#content">跳到主要内容</a>
     <header class="topbar">
-      <div>
-        <p class="eyebrow">TEMPORARY LOCALHOST CONSOLE</p>
-        <h1>E2E Flow Center</h1>
-        <p id="project-summary" class="muted">正在读取项目数据…</p>
+      <div class="brand-block">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>
+        </div>
+        <div>
+          <p class="eyebrow">TEMPORARY LOCALHOST CONSOLE</p>
+          <h1>E2E Flow Center</h1>
+          <p id="project-summary" class="muted">正在读取项目数据…</p>
+        </div>
       </div>
-      <p class="session-note">只读会话 · 127.0.0.1</p>
+      <div class="topbar-actions">
+        <nav class="view-tabs" aria-label="看板视图">
+          <button class="tab" id="board-tab" type="button" role="tab" aria-selected="true" aria-controls="board-view">流程看板</button>
+          <button class="tab" id="reports-tab" type="button" role="tab" aria-selected="false" aria-controls="reports-view">抽离报告</button>
+        </nav>
+        <button class="icon-button" id="refresh-button" type="button" aria-label="重新加载看板数据" title="重新加载看板数据">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        </button>
+        <p class="session-note">只读会话 · 127.0.0.1</p>
+      </div>
     </header>
-    <main id="content" class="layout">
-      <nav class="tabs" aria-label="看板视图">
-        <button class="tab" id="flows-tab" type="button" role="tab" aria-selected="true" aria-controls="flows-panel">流程目录</button>
-        <button class="tab" id="reports-tab" type="button" role="tab" aria-selected="false" aria-controls="reports-panel">抽离报告</button>
-      </nav>
 
-      <section id="flows-panel" role="tabpanel" aria-labelledby="flows-tab">
-        <div id="flow-summary" class="metrics" aria-live="polite"></div>
-        <div class="section-heading">
-          <div><p class="eyebrow">FLOW CATALOG</p><h2>流程与校验结果</h2></div>
-          <p class="muted">只显示业务摘要；不会显示凭据或步骤数据。</p>
-        </div>
-        <div id="flow-list" class="flow-list" aria-live="polite"></div>
-      </section>
+    <div id="error-banner" class="error-banner" role="alert" hidden>
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <span id="error-text"></span>
+      <button type="button" id="error-close" aria-label="关闭错误提示" title="关闭">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
 
-      <section id="reports-panel" role="tabpanel" aria-labelledby="reports-tab" hidden>
+    <main id="content">
+      <div id="board-view" class="workspace" role="tabpanel" aria-labelledby="board-tab">
+        <aside class="catalog-pane" aria-label="流程目录">
+          <div class="catalog-heading">
+            <div>
+              <p class="section-label">流程目录</p>
+              <strong id="catalog-total">–</strong>
+            </div>
+            <span class="attention-count" id="catalog-attention"></span>
+          </div>
+          <label class="search-field">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span class="sr-only">搜索流程</span>
+            <input id="flow-search" type="search" placeholder="搜索流程" autocomplete="off">
+          </label>
+          <nav class="flow-nav" id="flow-nav" aria-label="流程列表"></nav>
+          <details class="changed-files" id="changed-files" hidden>
+            <summary>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="3"/><path d="M12 6h5a2 2 0 0 1 2 2v7"/><path d="m15 9-3-3 3-3"/><circle cx="19" cy="18" r="3"/><path d="M12 18H7a2 2 0 0 1-2-2V9"/><path d="m9 15 3 3-3 3"/></svg>
+              <span>变更文件</span>
+              <span class="changed-count" id="changed-count"></span>
+            </summary>
+            <div class="changed-list" id="changed-list"></div>
+          </details>
+        </aside>
+
+        <section class="detail-pane" id="flow-detail" aria-live="polite"></section>
+
+        <aside class="activity-pane" id="activity-pane" aria-label="运行动态">
+          <div class="activity-heading">
+            <div>
+              <p class="section-label">运行动态</p>
+              <strong>最近运行</strong>
+            </div>
+          </div>
+          <div class="run-list" id="run-list"></div>
+          <section class="run-detail" id="run-detail" hidden></section>
+        </aside>
+      </div>
+
+      <div id="reports-view" role="tabpanel" aria-labelledby="reports-tab" hidden>
         <div class="report-layout">
-          <aside><div class="section-heading compact"><div><p class="eyebrow">IMMUTABLE SNAPSHOTS</p><h2>抽离报告</h2></div></div><div id="report-list" class="report-list" aria-live="polite"></div></aside>
-          <article id="report-detail" class="report-detail" aria-live="polite"><p class="empty">选择一份报告查看变更、证据和移交信息。</p></article>
+          <aside>
+            <div class="section-heading compact">
+              <div><p class="eyebrow">IMMUTABLE SNAPSHOTS</p><h2>抽离报告</h2></div>
+            </div>
+            <div id="report-list" class="report-list" aria-live="polite"></div>
+          </aside>
+          <article id="report-detail" class="report-detail" aria-live="polite">
+            <p class="empty">选择一份报告查看变更、证据和移交信息。</p>
+          </article>
         </div>
-      </section>
+      </div>
     </main>
     <script src="/static/app.js" defer></script>
   </body>

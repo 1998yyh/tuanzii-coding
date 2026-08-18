@@ -9,7 +9,8 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from .reports import REPORT_ID_RE, load_reports, report_by_id
-from .validation import validation_payload
+from .runs import load_runs, resolve_under_results
+from .validation import flow_counts, load_flows, validation_payload
 
 
 COOKIE_NAME = "e2e_flow_center_session"
@@ -55,17 +56,31 @@ def create_app() -> FastAPI:
 
     @app.get("/api/health")
     def health(_: None = Depends(authorized)):
-        payload = validation_payload(project_root)
+        # Liveness only: no git subprocesses or impact analysis, so the startup
+        # health check stays fast even on huge repositories.
+        valid, invalid = flow_counts(load_flows(project_root))
         return {
             "status": "ok",
             "projectName": project_root.name,
-            "validFlowCount": payload["validFlowCount"],
-            "invalidFlowCount": payload["invalidFlowCount"],
+            "validFlowCount": valid,
+            "invalidFlowCount": invalid,
         }
 
     @app.get("/api/flows")
     def flows(_: None = Depends(authorized)):
         return validation_payload(project_root)
+
+    @app.get("/api/runs")
+    def runs(_: None = Depends(authorized)):
+        return load_runs(project_root)
+
+    @app.get("/evidence/{path:path}", include_in_schema=False)
+    def evidence(path: str, _: None = Depends(authorized)):
+        # Read-only file service confined to results/; resolve() defeats symlink escapes.
+        resolved = resolve_under_results(project_root, path)
+        if resolved is None or not resolved.is_file():
+            raise HTTPException(status_code=404, detail="证据文件不存在或路径不合法。")
+        return FileResponse(resolved)
 
     @app.get("/api/extraction-reports")
     def extraction_reports(_: None = Depends(authorized)):

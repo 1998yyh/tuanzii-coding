@@ -2,6 +2,35 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [4.0.0] - 2026-08-18
+
+### 破坏性变更
+
+- 移除 8 个 superpowers 衍生 skill：`subagent-driven-development`、`finishing-a-development-branch`、`using-git-worktrees`、`test-driven-development`、`systematic-debugging`、`verification-before-completion`、`dispatching-parallel-agents` 与路由元规则 `using-tuanzii`；`skills/process/` 仅保留 `brainstorming`，skill 总数 49 → 41。
+- `brainstorming` 加 `disable-model-invocation: true`：模型不再默认调用，仅用户显式 `/tuanzii:brainstorming` 触发。
+- 移除 `docs/superpowers/` 流程产物目录；`brainstorming` 设计文档落盘路径不变，运行时自建。
+
+### 新增
+
+- e2e-flow-center 看板升级为三栏工作台：左栏搜索与分类导航（含变更文件面板），中栏流程详情（hero、状态/影响/优先级徽章、业务步骤、测试来源、影响路径、校验诊断），右栏运行记录与单次运行结果；顶部双视图切换保留抽离报告左右布局。
+- 运行历史与证据中心：扫描 `results/*.json` 运行清单（按时间倒序，上限 50 条，载荷带 total），逐流程展开结果与错误；证据模态框支持截图网格、视频回放与 Trace/日志/HTML 报告下载，Esc 关闭、焦点圈定、返回焦点；清单声明却缺失的产物显示警告。
+- Git 影响徽章：只读对比工作区变更（相对 HEAD 的改动与未跟踪文件）和流程 `paths`，标注受影响流程及原因（`path-match` / `always-run`）；非 git 仓库自动降级。
+- 服务端新增 `GET /api/runs` 与带鉴权的 `GET /evidence/<path>`（限定 `results/` 内、防路径穿越与符号链接逃逸）；`/api/flows` 载荷新增 `changedPaths` / `gitAvailable`，流程暴露 steps 脱敏视图（仅 id/title/expected，步骤数据永不出服务器）。
+
+### 修复
+
+- 修复视图切换失效：`.workspace` 的 `display:grid` 压过 UA 的 `[hidden]`，导致流程看板与抽离报告叠在同一页渲染。
+- 修复非 dict 顶层 YAML（列表/标量）打挂 `/api/flows` 与 `/api/health`：此类文件现在正常显示为无效并给出错误，而非整个载荷 500。
+- 修复运行清单 `flowId` / `id` 为绝对路径或含 `..` 时，证据目录扫描逃逸 `results/` 前缀并遍历全盘的问题。
+- 流程 `paths` 的 glob 匹配由正则翻译改为段式 DP，消除连排 `**/` 模式的灾难回溯（曾可挂起请求 10 秒以上）。
+- `_run_git` 捕获 `UnicodeDecodeError`：非 UTF-8 文件名降级为"git 不可用"，不再 500。
+- `/api/health` 不再执行 git 子进程与影响分析，大仓库下启动健康检查不再超时导致健康服务器被误杀。
+- git 变更路径统一为仓库根相对并按项目前缀裁剪，修复 monorepo 子目录下受影响判定的路径基准混乱与项目外变更泄漏。
+
+### 文档
+
+- e2e-flow-center SKILL.md 能力描述、接口清单与 evals 触发用例同步（新增 3 例共 8 例）；契约测试 21 → 25 项；CLAUDE.md 架构与表格同步。
+
 ## [3.3.1] - 2026-08-17
 
 ### 修复

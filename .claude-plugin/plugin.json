@@ -1,7 +1,7 @@
 {
   "name": "tuanzii",
   "description": "tuanzii: Git 工具、工程流程、工程流水线与 E2E 流程管理、效率与写作辅助、追问与领域建模 skills",
-  "version": "3.3.1",
+  "version": "4.0.0",
   "author": {
     "name": "hao.yang"
   },
@@ -14,14 +14,7 @@
     "./skills/git/git-guardrails-claude-code",
     "./skills/git/setup-pre-commit",
     "./skills/process/brainstorming",
-    "./skills/process/subagent-driven-development",
-    "./skills/process/finishing-a-development-branch",
-    "./skills/process/using-git-worktrees",
-    "./skills/process/test-driven-development",
-    "./skills/process/systematic-debugging",
-    "./skills/process/verification-before-completion",
-    "./skills/process/dispatching-parallel-agents",
-    "./skills/process/using-tuanzii",
+    "./skills/grilling/grilling",
     "./skills/grilling/grilling",
     "./skills/grilling/grill-me",
     "./skills/grilling/grill-with-docs",

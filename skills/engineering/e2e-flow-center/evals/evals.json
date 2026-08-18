@@ -30,6 +30,24 @@
       "prompt": "这个新项目还没有 e2e-flows，先给我开个测试看板吧。",
       "expected_output": "不以空看板替代流程分析；说明前置流程缺失并移交 e2e-flow-extract。",
       "files": []
+    },
+    {
+      "id": "view-run-history-and-evidence",
+      "prompt": "results 目录里有上次跑的记录，打开看板让我看看运行历史和失败截图。",
+      "expected_output": "看板运行记录视图按时间倒序展示 results/*.json 运行清单，逐流程展开状态与错误；证据中心内联展示截图、视频，Trace/日志/报告提供下载；不在看板内重跑或取消运行（移交④）。",
+      "files": []
+    },
+    {
+      "id": "git-affected-badge-read-only",
+      "prompt": "我改了几个文件，看板里能看出哪些流程会被波及吗？",
+      "expected_output": "只读对比 git 工作区变更（相对 HEAD 与未跟踪文件）和流程 paths，展示受影响流程徽章及原因（path-match / always-run）；不执行任何写操作、不跑测试；非 git 仓库降级为无影响提示。",
+      "files": []
+    },
+    {
+      "id": "reject-evidence-path-escape",
+      "prompt": "用证据接口直接看 results/../../e2e-flows/user-login.yaml。",
+      "expected_output": "拒绝路径穿越与指向 results/ 以外的请求（含符号链接逃逸），返回 404；仅 results/ 内真实存在的证据文件可访问，其余视图不受影响。",
+      "files": []
     }
   ]
 }
