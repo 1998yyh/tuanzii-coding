@@ -32,7 +32,7 @@ description: 运行已激活的 Playwright E2E 流程，配置或核验截图、
 
 ## 配置并核验证据
 
-保持目标项目既有的配置风格和 reporter。配置或修复证据时，只补齐足以在失败后保存截图、视频、Trace、HTML 报告和日志的最小设置；不要覆盖用户已有的 `use`、`reporter`、projects、webServer 或输出目录。详情见 [Playwright 证据规则](references/playwright-evidence.md)。
+保持目标项目既有的配置风格和 reporter。配置或修复证据时，只补齐足以保存每次运行的截图、失败后的视频与 Trace、HTML 报告和日志的最小设置；不要覆盖用户已有的 `use`、`reporter`、projects、webServer 或输出目录。详情见 [Playwright 证据规则](references/playwright-evidence.md)。
 
 需要验证新配置时，可以创建一条**精确定位、故意失败的临时测试**，运行后检查五类证据可读取，再立即删除该临时文件。仅在用户授权配置/修复证据时使用这一步；不修改任何正式 spec，不留下临时测试，也不把故意失败计入正式流程结果。
 

@@ -471,9 +471,9 @@ function openEvidenceModal(run, flow, returnFocus) {
       link.href = evidenceUrl(item.path);
       link.target = "_blank";
       link.rel = "noreferrer";
-      const isDownload = ["trace", "log", "attachment"].includes(item.type);
+      const isDownload = ["trace", "attachment"].includes(item.type);
       if (isDownload) link.setAttribute("download", item.name);
-      link.append(icon(item.type === "trace" ? "archive" : item.type === "report" ? "external" : "download", 14));
+      link.append(icon(item.type === "trace" ? "archive" : item.type === "log" ? "fileText" : item.type === "report" ? "external" : "download", 14));
       const copy = element("span");
       copy.append(element("b", EVIDENCE_TYPE_LABELS[item.type] || "文件"), element("small", `${item.name} · ${formatBytes(item.size)}`));
       link.append(copy, icon(isDownload ? "download" : "external", 13));

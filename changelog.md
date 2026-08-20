@@ -2,6 +2,13 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [4.2.0] - 2026-08-20
+
+### 新增
+
+- e2e-flow-center 证据中心执行日志支持在线打开：log 文件改为新标签页内联查看（`text/plain`），不再强制下载；仅 Trace 与未知类型附件保留强制下载。
+- e2e-evidence 证据契约调整：截图策略由 `only-on-failure` 改为 `on`——每次运行（无论成败）都保留截图；视频与 Trace 保持 `retain-on-failure` 不变。
+
 ## [4.1.0] - 2026-08-20
 
 ### 新增
