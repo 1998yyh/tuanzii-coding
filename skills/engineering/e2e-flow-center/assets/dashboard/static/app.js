@@ -106,18 +106,13 @@ const state = {
   query: "",
   runs: [],
   currentRunId: null,
+  currentReport: null,
 };
 
 const flowKey = (record) => record.flow?.id || record.path;
 const flowTone = (record) => (!record.valid ? "attention" : record.affected ? "affected" : "ready");
 
 function badge(text, kind = "") { return element("span", text, `badge ${kind}`.trim()); }
-
-function metric(value, label) {
-  const node = element("div", undefined, "metric");
-  node.append(element("strong", String(value)), element("span", label));
-  return node;
-}
 
 function sectionTitle(iconName, title, note) {
   const wrap = element("div", undefined, "section-title");
@@ -290,6 +285,14 @@ function renderDetail() {
   entryBlock.append(element("code", flow.entry?.url || "未配置", "path-block"));
   grid.append(entryBlock);
   pane.append(grid);
+
+  // 报告→看板联动的返回入口
+  if (state.currentReport) {
+    const back = element("button", `← 返回抽离报告 ${state.currentReport.id}`, "button compact back-report");
+    back.type = "button";
+    back.addEventListener("click", () => setView("reports"));
+    pane.prepend(back);
+  }
 }
 
 function diagnosticsSection(record) {
@@ -555,38 +558,215 @@ function listText(items, map = (value) => value) {
   return list;
 }
 
-function renderReport(report) {
-  const target = $("#report-detail"); target.replaceChildren();
-  const header = element("header", undefined, "report-header");
-  header.append(element("p", report.id, "eyebrow"), element("h2", "抽离报告"), element("p", `${report.createdAt} · ${report.approvalMode} · ${report.validation.level}/${report.validation.status}`, "muted"));
-  header.append(listText(report.scenarios, (scenario) => scenarioLabels[scenario] || scenario)); target.append(header);
-  const summary = element("div", undefined, "report-grid");
-  summary.append(metric(report.summary.createdFlowCount, "创建"), metric(report.summary.semanticUpdatedFlowCount, "语义更新"), metric(report.summary.provenanceUpdatedFlowCount, "仅更新溯源"), metric(report.summary.retiredFlowCount ?? 0, "下线"), metric(report.summary.readyFlowCount, "ready"), metric(report.summary.draftFlowCount, "draft"), metric(report.summary.blockedFlowCount, "阻塞")); target.append(summary);
+/* ---------- 抽离报告详情(方案 C:叙事视图 + 可选契约字段 fallback) ---------- */
+const NEXT_ACTION_LABELS = {
+  "await-user-confirmation": "等待人工确认业务语义",
+  "handoff-to-e2e-test-gen": "移交 e2e-test-gen 生成测试",
+  "review-test-selectors": "移交 e2e-test-gen 复核测试选择器",
+  "no-action": "无需后续动作",
+  blocked: "阻塞,暂不可移交",
+};
+const BLOCKED_REASON_LABELS = {
+  "awaiting-user-confirmation": "等待人工确认",
+  "missing-source-evidence": "缺少源码证据",
+  "uncertain-business-semantics": "业务语义存疑",
+  "full-schema-validation-unavailable": "完整校验器不可用",
+  "schema-validation-failed": "Schema 校验未通过",
+  "write-verification-failed": "写入验证失败",
+};
+const APPROVAL_LABELS = { manual: "人工确认模式", "source-validated": "源码自动验收模式" };
+const VALIDATION_LABELS = { full: "完整校验", light: "轻量自检", unavailable: "未校验" };
+const REVIEW_BASIS_LABELS = {
+  "pending-user-confirmation": "待确认",
+  "user-confirmed": "已人工确认",
+  "source-evidence-and-schema-validation": "源码自动验收",
+};
 
-  const changes = element("section", undefined, "detail-section"); changes.append(element("h3", "流程变更"));
-  if (!report.flowChanges.length) changes.append(element("p", "本次没有写入或更新流程。", "empty"));
-  for (const change of report.flowChanges) {
-    const row = element("details", undefined, "change");
-    const title = element("summary", `${change.flowId} · ${operationLabels[change.operation] || change.operation}`); row.append(title);
-    const before = change.lifecycle.before ? `${change.lifecycle.before.status} / ${change.lifecycle.before.enabled ? "enabled" : "disabled"}` : "新流程";
-    const after = `${change.lifecycle.after.status} / ${change.lifecycle.after.enabled ? "enabled" : "disabled"}`;
-    row.append(element("p", `${change.flow.persona} 要 ${change.flow.goal}`), element("p", `入口：${change.flow.entryUrl}；成功信号：${change.flow.successSignal}`, "muted"), element("p", `生命周期：${before} → ${after}`, "muted"), element("p", `下一步：${change.nextAction}`, "muted"));
-    const evidence = element("ul", undefined, "evidence");
-    for (const item of change.evidence) { const range = item.lineStart ? `:${item.lineStart}${item.lineEnd ? `-${item.lineEnd}` : ""}` : ""; evidence.append(element("li", `${item.path}${range} — ${item.reason}`)); }
-    row.append(evidence); changes.append(row);
+function reportFlowsById() {
+  const map = new Map();
+  for (const record of state.payload?.flows || []) {
+    if (record.flow?.id) map.set(record.flow.id, record);
   }
-  target.append(changes);
+  return map;
+}
 
-  const uncertainty = element("section", undefined, "detail-section"); uncertainty.append(element("h3", "覆盖与存疑"));
-  for (const item of report.coverage.uncovered || []) uncertainty.append(element("p", `未覆盖：${item.area} — ${item.reason}`, "warning"));
-  for (const item of report.uncertainties || []) uncertainty.append(element("p", `${item.severity}：${item.summary}；需要：${item.question}`, item.severity === "blocking" ? "error-box" : "warning"));
-  if (!(report.coverage.uncovered || []).length && !(report.uncertainties || []).length) uncertainty.append(element("p", "没有记录未覆盖区域或存疑项。", "muted"));
-  target.append(uncertainty);
+/* 快照 vs 当前 YAML:报告写完后的状态漂移,返回描述文本,无漂移返回 null */
+function reportDrift(change, flowsById) {
+  const record = flowsById.get(change.flowId);
+  if (!record?.flow) return null;
+  const after = change.lifecycle.after || {};
+  const current = record.flow;
+  const diffs = [];
+  if (current.status && current.status !== after.status) {
+    diffs.push(`${STATUS_LABELS[after.status] || after.status} → ${STATUS_LABELS[current.status] || current.status}`);
+  }
+  if (typeof current.enabled === "boolean" && current.enabled !== after.enabled) {
+    diffs.push(current.enabled ? "当前已启用" : "当前已停用");
+  }
+  return diffs.length ? diffs.join(";") : null;
+}
 
-  const handoff = element("section", undefined, "detail-section"); handoff.append(element("h3", "移交③ e2e-test-gen"));
-  handoff.append(element("p", report.handoff.e2eTestGen.readyFlowIds.length ? `可移交：${report.handoff.e2eTestGen.readyFlowIds.join("、")}` : "本次没有可交给测试生成的流程。", report.handoff.e2eTestGen.readyFlowIds.length ? "" : "warning"));
-  for (const blocked of report.handoff.e2eTestGen.blockedFlows) handoff.append(element("p", `${blocked.flowId}：${blocked.reason}`, "muted"));
-  target.append(handoff);
+/* 报告没有可选的 headline 字段时,用 summary 拼一句话总结 */
+function autoHeadline(report) {
+  const s = report.summary || {};
+  const parts = [];
+  if (s.createdFlowCount) parts.push(`新增 ${s.createdFlowCount} 条流程`);
+  if (s.semanticUpdatedFlowCount) parts.push(`${s.semanticUpdatedFlowCount} 条业务语义有更新`);
+  if (s.provenanceUpdatedFlowCount) parts.push(`${s.provenanceUpdatedFlowCount} 条仅更新溯源`);
+  if (s.retiredFlowCount) parts.push(`${s.retiredFlowCount} 条业务目标下线`);
+  const head = parts.length ? `本次抽离:${parts.join(",")}。` : "本次抽离没有改动任何流程。";
+  if (s.blockedFlowCount) return `${head} ${s.blockedFlowCount} 条流程等待处理。`;
+  if (s.readyFlowCount) return `${head} ${s.readyFlowCount} 条已就绪,可移交测试生成。`;
+  return head;
+}
+
+function lifecycleFlow(change) {
+  const wrap = element("div", undefined, "lifecycle-flow");
+  const before = change.lifecycle.before;
+  const after = change.lifecycle.after || {};
+  const chip = (label, status) => element("span", label, `lc-chip ${status || "none"}`);
+  wrap.append(before ? chip(STATUS_LABELS[before.status] || before.status, before.status) : chip("新流程", "none"));
+  wrap.append(element("span", "→", "lc-arrow"));
+  wrap.append(chip(STATUS_LABELS[after.status] || after.status, after.status));
+  if (after.review?.basis) wrap.append(element("span", REVIEW_BASIS_LABELS[after.review.basis] || after.review.basis, "lc-basis"));
+  return wrap;
+}
+
+function evidenceChips(evidence) {
+  const box = element("div", undefined, "evidence-chips");
+  for (const item of evidence || []) {
+    const range = item.lineStart ? `:${item.lineStart}${item.lineEnd ? `-${item.lineEnd}` : ""}` : "";
+    const chipItem = element("span", undefined, "ev-chip");
+    chipItem.append(element("code", `${item.path}${range}`), element("em", item.reason));
+    box.append(chipItem);
+  }
+  return box;
+}
+
+/* 可选契约字段 fieldChanges:语义更新流程的字段级 diff */
+function fieldDiffBlock(fieldChanges) {
+  const table = element("div", undefined, "field-diff");
+  for (const fc of fieldChanges) {
+    const row = element("div", undefined, "diff-row");
+    row.append(element("code", fc.field, "diff-field"));
+    const pair = element("div", undefined, "diff-pair");
+    pair.append(element("del", fc.before), element("ins", fc.after));
+    row.append(pair);
+    if (fc.reason) row.append(element("p", fc.reason, "muted"));
+    table.append(row);
+  }
+  return table;
+}
+
+/* 报告→看板联动:flowId 点击跳回三栏看板并选中该流程 */
+function jumpToFlow(flowId) {
+  const record = (state.payload?.flows || []).find((item) => item.flow?.id === flowId);
+  if (!record) { showError(`流程 ${flowId} 不在当前 e2e-flows/ 中。`); return; }
+  state.activeKey = flowKey(record);
+  setView("board");
+  renderCatalog();
+  renderDetail();
+}
+
+function summaryStrip(report) {
+  const s = report.summary;
+  const items = [
+    [s.createdFlowCount, "新建"], [s.semanticUpdatedFlowCount, "语义更新"], [s.provenanceUpdatedFlowCount, "仅溯源"],
+    [s.retiredFlowCount ?? 0, "下线"], [s.draftFlowCount, "待确认"], [s.blockedFlowCount, "阻塞"],
+  ];
+  const strip = element("div", undefined, "summary-strip");
+  for (const [value, label] of items) {
+    const cell = element("div", undefined, `summary-cell${value ? "" : " zero"}`);
+    cell.append(element("strong", String(value)), element("span", label));
+    strip.append(cell);
+  }
+  return strip;
+}
+
+function changeCard(change, flowsById) {
+  const card = element("article", undefined, `change-card op-${change.operation}`);
+  const head = element("div", undefined, "change-card-head");
+  const opKind = change.operation === "created" ? "ok" : change.operation === "retired" ? "error" : change.operation === "semantic-updated" ? "accent" : "";
+  head.append(badge(operationLabels[change.operation] || change.operation, opKind));
+  const link = element("button", change.flowId, "flow-link");
+  link.type = "button";
+  link.title = "在流程看板中查看";
+  link.addEventListener("click", () => jumpToFlow(change.flowId));
+  head.append(link);
+  const drift = reportDrift(change, flowsById);
+  if (drift) head.append(element("span", `快照后已变化:${drift}`, "drift-note"));
+  card.append(head);
+  card.append(element("h3", change.flow.name));
+  card.append(element("p", `${change.flow.persona} 要 ${change.flow.goal}`, "change-goal"));
+  card.append(element("p", `入口 ${change.flow.entryUrl} · 成功信号:${change.flow.successSignal}`, "muted"));
+  card.append(lifecycleFlow(change));
+  if (Array.isArray(change.fieldChanges) && change.fieldChanges.length) card.append(fieldDiffBlock(change.fieldChanges));
+  card.append(evidenceChips(change.evidence));
+  card.append(element("p", `下一步:${NEXT_ACTION_LABELS[change.nextAction] || change.nextAction}`, "change-next"));
+  return card;
+}
+
+function coverageSection(report) {
+  const section = element("section", undefined, "coverage-cols");
+  const coveredCol = element("div", undefined, "cov-col ok-col");
+  coveredCol.append(element("h3", `已覆盖 ${(report.coverage.covered || []).length} 块区域`));
+  for (const item of report.coverage.covered || []) {
+    const row = element("div", undefined, "cov-item");
+    row.append(element("strong", item.area), element("p", item.reason, "muted"));
+    coveredCol.append(row);
+  }
+  if (!(report.coverage.covered || []).length) coveredCol.append(element("p", "本次没有记录覆盖区域。", "muted"));
+  const gapCol = element("div", undefined, "cov-col warn-col");
+  const gapCount = (report.coverage.uncovered || []).length + (report.uncertainties || []).length;
+  gapCol.append(element("h3", `未覆盖与存疑 ${gapCount} 项`));
+  for (const item of report.coverage.uncovered || []) {
+    const row = element("div", undefined, "cov-item");
+    row.append(element("strong", `未覆盖:${item.area}`), element("p", item.reason, "muted"));
+    gapCol.append(row);
+  }
+  for (const item of report.uncertainties || []) {
+    const row = element("div", undefined, `cov-item sev-${item.severity}`);
+    row.append(element("strong", item.severity === "blocking" ? "阻塞存疑" : "存疑"), element("p", `${item.summary} ${item.question}`, "muted"));
+    gapCol.append(row);
+  }
+  if (!gapCount) gapCol.append(element("p", "没有未覆盖区域或存疑项。", "muted"));
+  section.append(coveredCol, gapCol);
+  return section;
+}
+
+function handoffSection(report) {
+  const handoff = report.handoff.e2eTestGen;
+  const section = element("section", undefined, "handoff-section");
+  section.append(element("h3", "移交 e2e-test-gen"));
+  if (handoff.readyFlowIds.length) {
+    section.append(element("p", `可移交:${handoff.readyFlowIds.join("、")}`));
+  } else {
+    section.append(element("p", "本次没有可交给测试生成的流程。", "handoff-empty"));
+  }
+  for (const blocked of handoff.blockedFlows) {
+    const row = element("p", undefined, "blocked-row");
+    row.append(element("b", blocked.flowId), document.createTextNode(` — ${BLOCKED_REASON_LABELS[blocked.reason] || blocked.reason}`));
+    section.append(row);
+  }
+  return section;
+}
+
+function renderReport(report) {
+  state.currentReport = report;
+  const target = $("#report-detail");
+  target.replaceChildren();
+  const flowsById = reportFlowsById();
+  const hero = element("header", undefined, "report-hero");
+  hero.append(element("p", `抽离报告 · ${report.id}`, "eyebrow"));
+  hero.append(element("h2", report.headline || autoHeadline(report), "report-headline"));
+  hero.append(element("p", `${formatTime(report.createdAt)} · ${APPROVAL_LABELS[report.approvalMode] || report.approvalMode} · ${VALIDATION_LABELS[report.validation.level] || report.validation.level}${report.validation.status === "passed" ? "通过" : "未通过"}`, "muted"));
+  hero.append(listText(report.scenarios, (scenario) => scenarioLabels[scenario] || scenario));
+  target.append(hero);
+  target.append(summaryStrip(report));
+  const wall = element("section", undefined, "change-wall");
+  if (!report.flowChanges.length) wall.append(element("p", "本次没有写入或更新流程。", "empty"));
+  for (const change of report.flowChanges) wall.append(changeCard(change, flowsById));
+  target.append(wall, coverageSection(report), handoffSection(report));
 }
 
 async function renderReports() {
@@ -597,7 +777,11 @@ async function renderReports() {
   const valid = payload.reports.filter((report) => report.valid);
   for (const report of payload.reports) {
     if (!report.valid) { list.append(element("p", `${report.filename}：${report.errors.join("；")}`, "error-box")); continue; }
-    const button = element("button", undefined, "report-button"); button.type = "button"; button.dataset.id = report.id; button.append(element("strong", report.id), element("span", report.scenarios.map((item) => scenarioLabels[item] || item).join(" · ")), element("span", `${report.createdAt} · 阻塞 ${report.summary.blockedFlowCount}`));
+    const button = element("button", undefined, "report-button"); button.type = "button"; button.dataset.id = report.id;
+    const touched = report.summary.createdFlowCount + report.summary.semanticUpdatedFlowCount + report.summary.provenanceUpdatedFlowCount + (report.summary.retiredFlowCount ?? 0);
+    const shortId = report.id.replace(/^extract-\d{8}T\d{6}Z-/, "");
+    button.title = report.id;
+    button.append(element("strong", formatTime(report.createdAt)), element("span", report.scenarios.map((item) => scenarioLabels[item] || item).join(" · ")), element("span", `变更 ${touched} · 阻塞 ${report.summary.blockedFlowCount} · ${shortId}`));
     button.addEventListener("click", () => selectReport(report.id)); list.append(button);
   }
   const selection = valid.find((report) => report.id === requested) || valid[0];

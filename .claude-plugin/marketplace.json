@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "tuanzii: Git 工具、工程流程、工程流水线与 E2E 流程管理、效率与写作辅助、追问与领域建模 skills",
-    "version": "4.0.0"
+    "version": "4.1.0"
   },
   "plugins": [
     {

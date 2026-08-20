@@ -2,11 +2,25 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [4.1.0] - 2026-08-20
+
+### 新增
+
+- e2e-flow-center 看板抽离报告升级为叙事视图：报告头展示 headline（缺省时按 summary 自动拼一句话总结）、六格摘要条（新建/语义更新/仅溯源/下线/待确认/阻塞）、变更卡片墙、覆盖区域与存疑双栏、移交 e2e-test-gen 区块（含阻塞原因中文标签）。
+- 变更卡片承载生命周期芯片（before → after + 验收依据）、可选契约字段 `fieldChanges` 的字段级 diff（del/ins 对照）、源码证据 chips（`path:行号` + 理由）与下一步动作中文标签。
+- 报告 ↔ 看板双向联动：变更卡片上的 flowId 点击跳回三栏看板并选中该流程；从报告进入看板时详情页提供"← 返回抽离报告"入口。
+- 状态漂移提示：对比报告快照与当前 `e2e-flows/` YAML，快照后 status / enabled 发生变化时在卡片头部标注。
+- 看板视觉重做：引入 Fira Sans / Fira Code 字体，报告列表按钮改为时间 + 场景 + 变更/阻塞计数 + 短 id。
+
+### 修复
+
+- 移除 `.claude-plugin/plugin.json` skills 数组中重复的 `./skills/grilling/grilling` 条目（41 → 40），CLAUDE.md 计数与 4.0.0 changelog 条目同步勘误。
+
 ## [4.0.0] - 2026-08-18
 
 ### 破坏性变更
 
-- 移除 8 个 superpowers 衍生 skill：`subagent-driven-development`、`finishing-a-development-branch`、`using-git-worktrees`、`test-driven-development`、`systematic-debugging`、`verification-before-completion`、`dispatching-parallel-agents` 与路由元规则 `using-tuanzii`；`skills/process/` 仅保留 `brainstorming`，skill 总数 49 → 41。
+- 移除 8 个 superpowers 衍生 skill：`subagent-driven-development`、`finishing-a-development-branch`、`using-git-worktrees`、`test-driven-development`、`systematic-debugging`、`verification-before-completion`、`dispatching-parallel-agents` 与路由元规则 `using-tuanzii`；`skills/process/` 仅保留 `brainstorming`，skill 总数 48 → 40（2026-08-19 勘误：原登记 "49 → 41" 系 4.0.0 编辑时 `grilling` 条目手滑重复一行所致，重复条目已于同日移除）。
 - `brainstorming` 加 `disable-model-invocation: true`：模型不再默认调用，仅用户显式 `/tuanzii:brainstorming` 触发。
 - 移除 `docs/superpowers/` 流程产物目录；`brainstorming` 设计文档落盘路径不变，运行时自建。
 

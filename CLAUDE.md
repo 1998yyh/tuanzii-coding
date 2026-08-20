@@ -19,7 +19,7 @@ claude plugin install tuanzii@tuanzii
 
 ```
 .claude-plugin/
-  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 41 个 skill 路径
+  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 40 个 skill 路径
   marketplace.json       # 本地 marketplace 清单（新版 Claude Code 市场规范要求，含独立 metadata.version）
 skills/                  # Skills 目录，按用途分组子目录，每个 skill 一个文件夹，入口为 SKILL.md
   git/                   # Git 工具（7 个）
@@ -272,5 +272,5 @@ git diff --check
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.9
-**最后更新**: 2026-08-18
+**版本**: v1.11
+**最后更新**: 2026-08-20
