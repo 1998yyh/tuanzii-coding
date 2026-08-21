@@ -90,7 +90,7 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 
 （※ = 衍生自 mattpocock/skills v1.2.3，全中文重写；mattpocock 系 skill 各含 `agents/openai.yaml` Codex 兼容文件，保持英文原样）
 
-无构建系统、无测试框架、无 lint 工具。项目是纯脚手架。
+仓库根级无构建系统、无 lint 工具，项目主体是纯脚手架。唯一例外：`skills/engineering/e2e-flow-center` 自带 FastAPI 看板应用（`assets/dashboard/pyproject.toml`，FastAPI + uvicorn + PyYAML，Python ≥3.11，src layout 靠测试内 `sys.path` 注入）和 25 项 unittest 契约测试（`tests/test_contracts.py`）——改动该看板后必须跑测试，命令见「可执行验证命令」。
 
 ## 核心架构：插件发现与加载
 
@@ -117,6 +117,9 @@ sh -n skills/process/brainstorming/scripts/start-server.sh skills/process/brains
 
 # 检查补丁中的空白错误
 git diff --check
+
+# 跑 e2e-flow-center 看板契约测试（25 项 unittest，改 dashboard 源码/契约后必跑）
+python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
 ```
 
 ## 开发规则
@@ -158,9 +161,10 @@ git diff --check
 
 ## 测试与验证
 
-无自动化测试框架。验证手段按场景：
+仓库根级无自动化测试框架（`npm test` 是 `exit 1` 占位符）；唯一例外是 e2e-flow-center 看板的 25 项 unittest 契约测试。验证手段按场景：
 
 - **skill 改动**：在 Claude Code 会话中用 `/tuanzii:<skill>` 触发验证；若本机仍走旧缓存符号链接则改动即时生效，否则需等插件更新
+- **e2e-flow-center 看板改动**：先跑 `python3 skills/engineering/e2e-flow-center/tests/test_contracts.py`，再用 `python3 skills/engineering/e2e-flow-center/scripts/start_dashboard.py --project <含 e2e-flows/ 的项目根>` 实起看板人工验证
 - **插件清单/版本号改动**：push 后在已安装机器上更新 marketplace 并用 `/plugins` 确认
 
 ## Skills
@@ -272,5 +276,5 @@ git diff --check
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.11
-**最后更新**: 2026-08-20
+**版本**: v1.12
+**最后更新**: 2026-08-21
