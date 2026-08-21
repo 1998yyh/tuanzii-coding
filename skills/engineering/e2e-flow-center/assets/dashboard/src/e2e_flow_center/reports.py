@@ -7,7 +7,7 @@ import json
 import re
 from typing import Any
 
-from .common import LIFECYCLE_STATUSES, enabled_issues, is_relative_path, is_text, review_issues
+from .common import LIFECYCLE_STATUSES, is_relative_path, is_text, review_issues
 
 
 REPORT_ID_RE = re.compile(r"^extract-\d{8}T\d{6}Z-[a-z0-9]{6,12}$")
@@ -72,8 +72,6 @@ def _lifecycle_errors(snapshot: Any, prefix: str) -> list[str]:
     status = snapshot.get("status")
     if status not in LIFECYCLE_STATUSES:
         errors.append(f"{prefix}.status 不合法。")
-    for message in enabled_issues(snapshot.get("enabled"), status):
-        errors.append(f"{prefix}.enabled {message}")
     for field_name, message in review_issues(snapshot.get("review"), status):
         errors.append(f"{prefix}.{field_name} {message}")
     return errors

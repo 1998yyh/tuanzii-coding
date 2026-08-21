@@ -99,7 +99,6 @@
     "before": null,
     "after": {
       "status": "draft",
-      "enabled": false,
       "review": {
         "mode": "manual",
         "basis": "pending-user-confirmation"
@@ -129,9 +128,9 @@
 |---|---|---|
 | `flowId` | string | 对应 YAML 的 id。 |
 | `flowPath` | string | 必须为 `e2e-flows/<flow-id>.yaml`。 |
-| `operation` | string | `created`、`semantic-updated`、`provenance-updated`、`retired` 或 `unchanged`。`retired` 表示业务目标下线：`lifecycle.before` 必填，`lifecycle.after` 为 `status: retired`、`enabled: false`。 |
-| `lifecycle.before` | object / null | 新流程为 `null`；否则记录分析前的 `status`、`enabled`、`review`。 |
-| `lifecycle.after` | object | 记录写入后的 `status`、`enabled`、`review`。 |
+| `operation` | string | `created`、`semantic-updated`、`provenance-updated`、`retired` 或 `unchanged`。`retired` 表示业务目标下线：`lifecycle.before` 必填，`lifecycle.after` 为 `status: retired`。 |
+| `lifecycle.before` | object / null | 新流程为 `null`；否则记录分析前的 `status`、`review`。 |
+| `lifecycle.after` | object | 记录写入后的 `status`、`review`。 |
 | `flow` | object | 面向页面展示的脱敏业务概览：`name`、`persona`、`goal`、`entryUrl`、`successSignal` 均必填。 |
 | `evidence` | array | 至少一个项目相对路径和理由；行号可选，提供时为正整数且 `lineEnd ≥ lineStart`。 |
 | `nextAction` | string | `await-user-confirmation`、`handoff-to-e2e-test-gen`、`review-test-selectors`、`no-action` 或 `blocked`。 |

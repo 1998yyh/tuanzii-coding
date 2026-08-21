@@ -14,7 +14,7 @@ description: 为已有 e2e-flows/ 的项目按需启动临时、本机的 E2E �
 | ① | `e2e-flow-extract` | 创建或维护 `e2e-flows/*.yaml`，并写不可变抽离报告。 |
 | ② | `e2e-flow-center` | 本 Skill：完整校验、临时看板和只读数据展示。 |
 | ③ | `e2e-test-gen` | 为 `ready` 流程生成并实跑 Playwright。 |
-| ④ | `e2e-evidence` | 运行、收集证据、解释失败，并在获准时启用流程。 |
+| ④ | `e2e-evidence` | 运行 `active` 流程、收集证据并解释失败。 |
 
 ②绝不写入流程 YAML、报告 JSON、测试、业务代码、`playwright.config`、`package.json`、锁文件或 `node_modules`。流程或报告有误时，将错误显示在看板和命令输出中，不能“顺手修复”。
 
@@ -37,7 +37,7 @@ description: 为已有 e2e-flows/ 的项目按需启动临时、本机的 E2E �
 python3 scripts/validate.py --project <target-project-root>
 ```
 
-校验器输出 JSON：每个 `e2e-flows/<id>.yaml` 的状态、面向字段的错误和汇总；只要存在错误便以非零状态退出。它检查版本、id/文件名、必填字段、步骤与 signal、相对路径、来源文件、状态/review 一致性和 `enabled` 的结构前置条件。它不会验证业务语义是否正确，也不会启动测试。
+校验器输出 JSON：每个 `e2e-flows/<id>.yaml` 的状态、面向字段的错误和汇总；只要存在错误便以非零状态退出。它检查版本、id/文件名、必填字段、步骤与 signal、相对路径、来源文件和状态/review 一致性。它不会验证业务语义是否正确，也不会启动测试。
 
 ①在 `approvalMode: source-validated` 下必须成功运行该校验器，才能将流程推进为 `ready`；若②不可用，①必须保留 `draft`。
 
@@ -70,4 +70,4 @@ python3 scripts/cleanup_stale_sessions.py --project <target-project-root>
 
 ## 汇报格式
 
-结束时报告：看板 URL（若已启动）、有效/无效流程数量、可执行流程数量（`active` 且 `enabled: true`）、有效/无效报告数量，以及下一步移交。若可执行流程是 0，要明确说明原因；缺少测试时移交③，而不要假装②已经运行了测试。
+结束时报告：看板 URL（若已启动）、有效/无效流程数量、可执行流程数量（`active`）、有效/无效报告数量，以及下一步移交。若可执行流程是 0，要明确说明原因；缺少测试时移交③，而不要假装②已经运行了测试。

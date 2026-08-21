@@ -4,7 +4,7 @@
     {
       "id": "generate-ready-flow-and-promote",
       "prompt": "根据 user-login 这条已确认的 ready 流程生成 Playwright 测试并实跑；通过后推进状态。",
-      "expected_output": "读取 YAML 和源码，为每个步骤 id 写对应 test.step，使用安全 fixture 与用户可见断言；单文件通过后才将该流程从 ready 设为 active，并保留 enabled: false 和 review。",
+      "expected_output": "读取 YAML 和源码，为每个步骤 id 写对应 test.step，使用安全 fixture 与用户可见断言；单文件通过后才将该流程从 ready 设为 active，并保留 review。",
       "files": []
     },
     {
@@ -22,7 +22,7 @@
     {
       "id": "selector-review-for-active-flow",
       "prompt": "结算页面组件重构了，请为 active 的 checkout-order 修复测试选择器并验证，但不要改流程业务含义。",
-      "expected_output": "读取源码与既有 spec，最小化更新可证明的选择器并实跑；保持 active 和 enabled 原样，业务契约冲突时移交①。",
+      "expected_output": "读取源码与既有 spec，最小化更新可证明的选择器并实跑；保持 active 状态不变，业务契约冲突时移交①。",
       "files": []
     },
     {
@@ -34,7 +34,7 @@
     {
       "id": "generate-without-running",
       "prompt": "只为 ready 的 user-login 生成 spec，先不要运行，也不要把流程推进为 active。",
-      "expected_output": "生成并复读确认 spec；若创建成功，将 test.source 从 external 同步为 existing，但保留 ready、enabled 和 review，不宣称已实跑。",
+      "expected_output": "生成并复读确认 spec；若创建成功，将 test.source 从 external 同步为 existing，但保留 ready 与 review，不宣称已实跑。",
       "files": []
     },
     {

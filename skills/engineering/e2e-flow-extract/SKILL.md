@@ -25,7 +25,7 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
 - 流程的唯一规范来源是目标项目根目录的 `e2e-flows/*.yaml`。不要创建 `flows/` 副本，也不要把 YAML 复制到看板目录。
 - 每次抽离的审计快照写入项目根 `e2e-flow-reports/<report-id>.json`。报告不是第二份流程定义，不能被用来反向覆盖 `e2e-flows/`。
 - 只处理流程的业务定义及其允许的生命周期字段。不要写 Playwright spec、修改业务代码、修改 `playwright.config`、安装或启动看板。
-- 默认以人工确认模式运行：所有新流程以 `status: draft` 和 `enabled: false` 创建。用户确认业务语义后，才把指定流程标为 `ready`。
+- 默认以人工确认模式运行：所有新流程以 `status: draft` 创建。用户确认业务语义后，才把指定流程标为 `ready`。
 - 凭据、token、Cookie、真实邮箱、个人信息和请求头不得写入 YAML、报告或示例。只记录环境变量名和脱敏的数据来源说明。
 - 不能从源码证明的内容必须标记为存疑；不要用想象补齐接口、选择器、跳转或用户权限。
 
@@ -40,7 +40,7 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
 
 自动化调用必须显式包含 `approvalMode: source-validated`，例如：`以 approvalMode: source-validated 抽离当前分支的受影响流程，并将可验证条目交给测试生成。` 这是管线授予的验收权限，不是缺少人工回复时的默认行为。
 
-无论模式如何，`enabled` 都保持 `false`；①不设置 `active` 或 `enabled: true`。自动验收必须在流程 YAML 中写入 `review.mode: source-validated` 和 `review.basis: source-evidence-and-schema-validation`，使后续步骤能分辨它不是人工确认。
+无论模式如何，①都不设置 `active`。自动验收必须在流程 YAML 中写入 `review.mode: source-validated` 和 `review.basis: source-evidence-and-schema-validation`，使后续步骤能分辨它不是人工确认。
 
 ## 开始前的分流
 
@@ -51,12 +51,12 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
 | 首次抽离 | 没有 `e2e-flows/`，或目录为空且用户确认尚未建立流程 | 从零建立覆盖图；人工模式创建少量高价值 `draft`，自动模式只将证据充分且校验通过的条目设为 `ready` |
 | 已有流程盘点 | 已有有效 YAML，用户只要求梳理/盘点，未提供新功能或变更主张 | 读取全部 YAML 与最小必要源码；只报告覆盖、漂移和存疑，默认不改流程或生命周期 |
 | 旧项目新增流程 | 已有 YAML，新增的是一个独立的角色 + 可感知目标 | 保留旧流程；只为新目标创建新的 `draft` YAML |
-| 原流程有改动 | 已有 YAML 的 persona、goal、entry、关键步骤或可观察结果发生业务变化 | 更新同一份 YAML，重新设为 `draft` 和 `enabled: false` |
-| 业务目标下线 | 源码能证实入口和完成目标已被移除，或用户明确说明该目标已下线 | 保留 YAML 作为历史契约，设为 `status: retired`、`enabled: false`，不删除文件也不移交③ |
+| 原流程有改动 | 已有 YAML 的 persona、goal、entry、关键步骤或可观察结果发生业务变化 | 更新同一份 YAML，重新设为 `draft` |
+| 业务目标下线 | 源码能证实入口和完成目标已被移除，或用户明确说明该目标已下线 | 保留 YAML 作为历史契约，设为 `status: retired`，不删除文件也不移交③ |
 | 纯实现变化 | 路径语义未变，只是组件、文案、选择器或实现重构 | 不改变流程语义或生命周期；更新 `sources` / `paths`（若需要）并移交③复核测试 |
 | 无法判断 | 缺少变更基线、源码证据或产品规则 | 不修改现有流程；报告存疑项并向用户询问 |
 
-`retired` 流程默认保持停用。只有用户明确要求恢复该业务目标时，才根据当前源码重新评审：先回到 `draft`、`enabled: false`、`review.mode: manual` / `review.basis: pending-user-confirmation`；只有显式 `source-validated` 调用满足全部自动验收门槛时，才可直接重回 `ready`。不得用“源码又出现了相似页面”自行恢复。
+`retired` 流程默认保持停用。只有用户明确要求恢复该业务目标时，才根据当前源码重新评审：先回到 `draft`、`review.mode: manual` / `review.basis: pending-user-confirmation`；只有显式 `source-validated` 调用满足全部自动验收门槛时，才可直接重回 `ready`。不得用“源码又出现了相似页面”自行恢复。
 
 ## 取证和建模
 
@@ -73,7 +73,7 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
 1. 创建项目根 `e2e-flows/`；不要创建看板、测试或占位流程。
 2. 建立覆盖图：入口页面、主要 persona、关键目标、已覆盖区域、无法确认区域。
 3. 按风险和用户价值排序，先抽身份认证、关键交易/提交、核心查询或管理目标等流程；没有证据的功能不纳入。
-4. 为每条流程写 `e2e-flows/<flow-id>.yaml`：人工模式均为 `draft` 与 `enabled: false`；自动模式仅将通过“验收模式”全部门槛的条目写为 `ready`，其余保留 `draft`。
+4. 为每条流程写 `e2e-flows/<flow-id>.yaml`：人工模式均为 `draft`；自动模式仅将通过“验收模式”全部门槛的条目写为 `ready`，其余保留 `draft`。
 5. 写入抽离报告 JSON，明确这是首次基线、共创建多少条、哪些区域未覆盖，以及每条流程是待人工确认还是已由源码验收。
 
 ### 2. 旧项目：新增流程
@@ -81,7 +81,7 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
 1. 先读取全部现有 YAML，建立 `id → persona/goal/entry/sources/paths` 索引，避免按新文件名误判为新流程。
 2. 查看用户指定的功能、当前工作区变更和相关路由/页面。若有明确 Git 基线，使用它辅助定位；没有基线时，仅将其作为当前源码分析，不声称知道历史差异。
 3. 判断新增功能是否带来了新的可感知目标或新的角色路径。仅新增 API、字段、组件或按钮不足以创建新流程。
-4. 若确为独立目标，创建一个新的 YAML：人工模式为 `draft`；自动模式仅在所有自动验收门槛通过时设为 `ready`。不要更改无关已有流程的 status 或 enabled。
+4. 若确为独立目标，创建一个新的 YAML：人工模式为 `draft`；自动模式仅在所有自动验收门槛通过时设为 `ready`。不要更改无关已有流程的 status。
 5. 若它只是扩展已有目标，按“原流程有改动”处理；若只是实现细节，保持流程语义不变并报告给③。
 
 ### 3. 旧项目：原流程有改动
@@ -93,8 +93,8 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
    - **纯实现变化**：组件迁移、选择器/文案变化、内部 API 重构，且用户目标与成功条件未变。
    - **不确定**：源码无法证明当前行为，或产品要求在代码外。
 
-3. 对业务语义变化，原地更新同一份 `<flow-id>.yaml`，先重置为 `status: draft`、`enabled: false`；自动模式也不例外。随后只有自动验收门槛通过时，才能在同一次有序操作中推进为 `ready`，否则保持 `draft`。保留稳定的 `id`，除非它已无法表达流程；若需要拆分或合并流程，先在报告中说明并请求用户确认，避免悄悄丢失溯源。
-4. 对纯实现变化，不降级 `status` 或关闭 `enabled`。仅在来源或影响范围已过期时更新 `sources` / `paths`，并在报告中列出“需③复核测试”的流程。
+3. 对业务语义变化，原地更新同一份 `<flow-id>.yaml`，先重置为 `status: draft`；自动模式也不例外。随后只有自动验收门槛通过时，才能在同一次有序操作中推进为 `ready`，否则保持 `draft`。保留稳定的 `id`，除非它已无法表达流程；若需要拆分或合并流程，先在报告中说明并请求用户确认，避免悄悄丢失溯源。
+4. 对纯实现变化，不降级 `status`。仅在来源或影响范围已过期时更新 `sources` / `paths`，并在报告中列出“需③复核测试”的流程。
 5. 对不确定变化，不修改流程定义或生命周期；把具体问题、已检查文件和所需产品确认写进报告。
 
 ## 写入流程 YAML
@@ -106,8 +106,8 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
 - 每个步骤都有用户可理解的标题和可观察的 `expected`；每个 `signal` 在源码中有依据。
 - `fixtures` 只能使用 Schema 的 `env` / `sources` 受限结构；`steps[].data` 只能引用已登记的 `fixtures.env.<别名>`，不放入任何真实值。
 - `test.spec` 必须是 Schema 允许的 E2E spec 路径；路径不合规时不要创建或改写任何文件。
-- 人工模式下新建或业务语义更新的流程都是 `draft`、`enabled: false`；自动模式下只有通过全部证据与 Schema 门槛的条目可成为 `ready`，并仍保持 `enabled: false`。
-- 仅实现层变化时，不伪造语义更新，不创建重复流程，也不改变 `status` / `enabled`。
+- 人工模式下新建或业务语义更新的流程都是 `draft`；自动模式下只有通过全部证据与 Schema 门槛的条目可成为 `ready`。
+- 仅实现层变化时，不伪造语义更新，不创建重复流程，也不改变 `status`。
 
 完整校验器属于② `e2e-flow-center` Skill，不属于目标项目。②可用时，从它的 Skill 目录调用：
 
@@ -119,14 +119,14 @@ python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
 
 ## 确认、自动验收与状态推进
 
-抽离完成后不要自动把流程标为 `ready`。向用户逐条展示 persona、goal、入口和成功结果，并请求确认。只有用户明确确认的条目可由本 Skill 从 `draft` 改为 `ready`。不要把任何流程标为 `active`，也不要设为 `enabled: true`。
+抽离完成后不要自动把流程标为 `ready`。向用户逐条展示 persona、goal、入口和成功结果，并请求确认。只有用户明确确认的条目可由本 Skill 从 `draft` 改为 `ready`。不要把任何流程标为 `active`。
 
 ### 确认后交给③的硬协议
 
 用户可能把确认和后续意图合在一句话中，例如“这几条对，去写测试”。按以下顺序处理，不能跳步：
 
 1. 解析用户明确确认的流程 id；确认范围不清楚时，先请求澄清，不要推测全部 `draft` 都已确认。
-2. 重新读取这些 YAML。对仍为 `draft` 的已确认流程，在同一次写入中设为 `status: ready`、`enabled: false`，并写入：
+2. 重新读取这些 YAML。对仍为 `draft` 的已确认流程，在同一次写入中设为 `status: ready`，并写入：
 
    ```yaml
    review:
@@ -135,7 +135,7 @@ python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
    ```
 
    已是 `ready` 的流程不重复改写；先验证其 `review` 合法后继续。`active`、`retired` 或状态/确认范围不一致的流程不得借此协议推进。
-3. 重新读取并验证写入结果；②可用时运行完整校验。新推进的流程若写入、复读或该流程自身的校验失败，回退为 `draft`、`enabled: false`、`review.mode: manual` 与 `review.basis: pending-user-confirmation`；回退也失败时如实报告当前落盘状态。
+3. 重新读取并验证写入结果；②可用时运行完整校验。新推进的流程若写入、复读或该流程自身的校验失败，回退为 `draft`、`review.mode: manual` 与 `review.basis: pending-user-confirmation`；回退也失败时如实报告当前落盘状态。
 4. 依照“写入可视化报告”创建并原子写入报告后，只有已验证为 `ready` 且列入该报告 `handoff.e2eTestGen.readyFlowIds` 的流程，才可移交③。移交时传递明确的 `<report-id>`；③不得自行猜测“最新”报告。
 5. 任何仍为 `draft`、写入失败、Schema 校验失败、未获确认或未进入 `readyFlowIds` 的流程都不得移交③；在报告中说明阻塞原因。
 
@@ -147,7 +147,7 @@ python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
 
 1. 对每条候选重新核验 entry、关键步骤、expected/signal、sources 和 paths；任何未证实或有歧义的业务字段都标为存疑。
 2. 运行完整 Schema 校验器；若②不可用，完成轻量自检并在报告中标记“未完整校验”，此时流程必须保持 `draft`，不得自动验收。
-3. 只有没有存疑项且完整校验通过的流程，才写入 `status: ready`、`enabled: false`，并写入：
+3. 只有没有存疑项且完整校验通过的流程，才写入 `status: ready`，并写入：
 
    ```yaml
    review:
@@ -156,7 +156,7 @@ python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
    ```
 
 4. 重新读取并验证该 YAML。只有已持久化为 `ready` 且 review 溯源正确的流程，才可列入本次报告的 `handoff.e2eTestGen.readyFlowIds`。
-5. 任一证据、校验或写入步骤失败时，保留或回退为 `draft`、`enabled: false`，并且不得移交③。报告原子写入后，向③传递该明确的 `<report-id>`；③只消费该报告中的 `readyFlowIds`。
+5. 任一证据、校验或写入步骤失败时，保留或回退为 `draft`，并且不得移交③。报告原子写入后，向③传递该明确的 `<report-id>`；③只消费该报告中的 `readyFlowIds`。
 
 自动模式不会要求人工确认，但必须在报告中列出自动验收的流程、使用的证据和被保留为 `draft` 的原因。
 
@@ -191,7 +191,7 @@ python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
 
 | 流程 | 操作 | 状态 | 证据 |
 |---|---|---|---|
-| <id> | 创建 / 语义更新 / 仅更新溯源 / 下线 / 未修改 | <status, enabled, review.basis> | <关键 sources> |
+| <id> | 创建 / 语义更新 / 仅更新溯源 / 下线 / 未修改 | <status, review.basis> | <关键 sources> |
 
 ## 流程概览
 

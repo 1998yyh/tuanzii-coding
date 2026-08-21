@@ -8,10 +8,10 @@
 
 | 编号 | Skill | 生命周期职责 |
 |---|---|---|
-| ① | `e2e-flow-extract` | 在人工确认或显式 `source-validated` 自动验收后将流程持久化为 `ready`；业务语义变化时保持 `enabled: false`，并按验收模式重新评审。 |
+| ① | `e2e-flow-extract` | 在人工确认或显式 `source-validated` 自动验收后将流程持久化为 `ready`；业务语义变化时先重置为 `draft`，并按验收模式重新评审。 |
 | ② | `e2e-flow-center` | 提供临时看板和完整 Schema 校验器；只读流程。 |
 | ③ | `e2e-test-gen` | 只接收 `ready` 流程；实跑通过后将其设为 `active`，并在创建 spec 后同步测试落点状态。 |
-| ④ | `e2e-evidence` | 只在 `active`、证据校验通过且用户同意后设 `enabled: true`。 |
+| ④ | `e2e-evidence` | 只运行 `active` 流程，归档并解释证据；不修改流程 YAML。 |
 
 ①向③移交是有序操作：①必须先写入并重新读取确认 `status: ready`，然后才能移交。`draft`、`retired`、校验失败、未获人工确认的手动流程，或未达到自动验收门槛的流程都不得交给③。
 
@@ -36,7 +36,6 @@
 | `goal` | string | 该角色能感知的业务目标及成功结果。 |
 | `priority` | string | `P0`、`P1`、`P2` 或 `P3`。 |
 | `status` | string | `draft`、`ready`、`active` 或 `retired`。 |
-| `enabled` | boolean | 看板/运行器的独立运行开关。 |
 | `review` | object | 可选；记录 `ready` 的人工或自动验收来源。自动验收的 `ready` 流程必须提供。 |
 | `entry` | object | 流程入口与认证前置条件。 |
 | `fixtures` | object | 可选；只能以受限的 `env` / `sources` 结构描述安全输入。 |
@@ -187,30 +186,29 @@ alwaysRunOnAffected: true
 - `paths` 用于 Git 影响分析，应覆盖实现该业务目标的主要目录；不要使用 `**` 这种无边界 glob。
 - `sources` 是本次推断的证据文件，必须真实存在。它可以包含路由、页面、控制器、测试或 README。
 - `test.spec` 是预期或现有 E2E spec 的项目相对路径。它必须位于顶层 `e2e/`、`playwright/`，或 `test(s)/e2e/`、`test(s)/playwright/` 下，且文件名为 `*.e2e.<js|ts|jsx|tsx|mjs|cjs|mts|cts>` 或 `*.spec.<js|ts|jsx|tsx|mjs|cjs|mts|cts>`；路径中的任何目录和最终文件都不得是符号链接。这能避免③把业务源码误认为可写测试文件。`test.source: external` 表示①登记了待③创建的落点；`existing` 表示该 spec 已存在。③成功创建 `test.spec` 后，只可把同一路径的 `test.source` 从 `external` 改为 `existing`，不改动其他流程语义。`existing` 的 spec 必须存在。
-- `alwaysRunOnAffected: true` 只表示命中影响路径时的默认选择，不能绕过 `enabled: false`。
+- `alwaysRunOnAffected: true` 只表示命中影响路径时的默认入选建议，不改变 `status`，也不代表流程会被自动运行；运行哪些 `active` 流程由调用④时决定。
 
 ## 生命周期和变更规则
 
 ```text
 draft --人工确认，①写入--> ready --③实跑通过--> active
 draft --显式自动验收 + 证据齐全 + 完整校验通过，①写入--> ready
-active --④证据校验通过且用户同意--> enabled: true
-ready / active --业务语义变化，①更新--> draft + enabled: false
+ready / active --业务语义变化，①更新--> draft
 ```
 
 | 情况 | ①的写入行为 |
 |---|---|
-| 新流程 | 创建 `draft`、`enabled: false`。 |
+| 新流程 | 创建 `draft`。 |
 | 用户确认草稿 | 将确认的 `draft` 改为 `ready`，并写入 `review.mode: manual` / `review.basis: user-confirmed`。 |
 | 显式自动验收 | 仅在证据齐全、无存疑、完整校验通过时设为 `ready`，并写入 `review.mode: source-validated`。 |
 | 已有流程新增独立目标 | 新建另一条 `draft`，不影响旧流程。 |
-| 已有流程业务语义变化 | 原地更新同一 id，并先设 `status: draft`、`enabled: false`；显式自动验收的全部门槛通过后，才可在同一次有序操作中重新设为 `ready`。 |
-| 纯实现变化 | 可更新 `sources` / `paths`；不改变 `status` 或 `enabled`。 |
-| 业务目标下线 | 保留原 YAML，设为 `status: retired`、`enabled: false`，不删除文件也不移交③。 |
-| `retired` 流程恢复 | 仅在用户明确要求恢复该目标后，按当前源码重新评审；默认写回 `draft`、`enabled: false` 与 `manual/pending-user-confirmation`，显式自动验收且通过全部门槛时才可重回 `ready`。 |
+| 已有流程业务语义变化 | 原地更新同一 id，并先设 `status: draft`；显式自动验收的全部门槛通过后，才可在同一次有序操作中重新设为 `ready`。 |
+| 纯实现变化 | 可更新 `sources` / `paths`；不改变 `status`。 |
+| 业务目标下线 | 保留原 YAML，设为 `status: retired`，不删除文件也不移交③。 |
+| `retired` 流程恢复 | 仅在用户明确要求恢复该目标后，按当前源码重新评审；默认写回 `draft` 与 `manual/pending-user-confirmation`，显式自动验收且通过全部门槛时才可重回 `ready`。 |
 
-只有③可以将 `ready` 推进为 `active`，并在创建 spec 后执行上述唯一允许的 `test.source: external → existing` 同步。③不得接收 `draft` 或 `retired` 流程。只有④在证据校验通过、且用户明确同意时可以设 `enabled: true`。①绝不设 `active` 或 `enabled: true`。
+只有③可以将 `ready` 推进为 `active`，并在创建 spec 后执行上述唯一允许的 `test.source: external → existing` 同步。③不得接收 `draft` 或 `retired` 流程。④只运行 `active` 流程，不修改流程 YAML。①绝不设 `active`。
 
 ## 轻量自检
 
-没有②的完整校验器时，①至少检查：文件名与 id 一致、必填字段存在、enum 合法、步骤 id 唯一、来源文件存在、路径是相对路径、`test.spec` 是受限 E2E spec 路径、`fixtures` 只有受限结构且 `data` 只引用其 `env` 别名，以及 review 与 status 一致。人工模式下新建/语义更新流程处于 `draft` 且未启用。自动模式缺少②的完整校验器时，流程也必须保持 `draft` 且未启用。完整校验器可用时，它是可执行事实；本文件必须随之更新。
+没有②的完整校验器时，①至少检查：文件名与 id 一致、必填字段存在、enum 合法、步骤 id 唯一、来源文件存在、路径是相对路径、`test.spec` 是受限 E2E spec 路径、`fixtures` 只有受限结构且 `data` 只引用其 `env` 别名、review 与 status 一致，以及 `test.source` 为 `existing` 且 spec 存在时每个步骤 id 都以名称前缀形式出现在该 spec 的 `test.step` 中。人工模式下新建/语义更新流程处于 `draft`。自动模式缺少②的完整校验器时，流程也必须保持 `draft`。完整校验器可用时，它是可执行事实；本文件必须随之更新。

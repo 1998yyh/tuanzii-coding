@@ -28,7 +28,6 @@
         "before": null,
         "after": {
           "status": "draft",
-          "enabled": false,
           "review": {
             "mode": "manual",
             "basis": "pending-user-confirmation"

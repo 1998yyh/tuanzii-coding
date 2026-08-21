@@ -2,6 +2,19 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [4.3.0] - 2026-08-21
+
+### 变更
+
+- 移除流程 `enabled` 运行开关：Schema 字段、看板校验与看板视图、④的启用职责一并删除，生命周期简化为 `draft → ready → active`；运行哪些 `active` 流程由调用④时决定。既有 YAML 中的 `enabled` 字段被静默忽略，不导致校验失败。
+- 业务语义变化的重置路径同步简化：由 `draft + enabled: false` 改为仅重置 `status: draft`；`retired` 恢复、`alwaysRunOnAffected` 语义等关联规则同步去掉 enabled 前提。
+
+### 新增
+
+- ②完整校验器新增 spec ↔ YAML 步骤机械核对：`test.source: existing` 且 spec 存在时，每个 YAML 步骤 id 必须以名称前缀形式出现在该 spec 的 `test.step` 中；①轻量自检同步纳入该项。
+- ③《Playwright 模式》新增步骤证据截图：每个 `test.step` 末尾（断言通过后）按步骤 id 命名留全页截图（`animations: "disabled"`），供④归档到 `results/<run-id>/evidence/<flow-id>/`。
+- ④证据规则新增三节：步骤级截图（评审以步骤截图为主、结束态兜底图为辅）、配置合并陷阱（`projects[].use` 展开桌面设备描述符会静默覆盖顶层移动端视口）、视口保真校验（机械核对截图尺寸与配置 viewport 一致）；并明确 Playwright 每次运行前清空 `--output` 目录——已归档证据目录不得复用为后续任何运行的 outputDir，补跑一律用全新目录。
+
 ## [4.2.0] - 2026-08-20
 
 ### 新增

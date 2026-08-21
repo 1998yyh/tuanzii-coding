@@ -1,6 +1,6 @@
 ---
 name: e2e-test-gen
-description: 根据项目根 `e2e-flows/*.yaml` 和源码生成、补齐或修复可执行的 Playwright E2E 测试，并在单文件实跑通过后将已确认的 `ready` 流程推进为 `active`。用户要求“根据流程生成测试”“补 Playwright 测试”“为 ready 流程写测试”或因纯实现变化需要复核选择器时使用。不要用于抽离或修改业务流程、启动看板、运行已启用流程收集证据、修改业务代码、修改 `playwright.config` 或启用流程。
+description: 根据项目根 `e2e-flows/*.yaml` 和源码生成、补齐或修复可执行的 Playwright E2E 测试，并在单文件实跑通过后将已确认的 `ready` 流程推进为 `active`。用户要求“根据流程生成测试”“补 Playwright 测试”“为 ready 流程写测试”或因纯实现变化需要复核选择器时使用。不要用于抽离或修改业务流程、启动看板、运行流程收集证据、修改业务代码或修改 `playwright.config`。
 ---
 
 # E2E Test Generation
@@ -14,11 +14,11 @@ description: 根据项目根 `e2e-flows/*.yaml` 和源码生成、补齐或修�
 | ① | `e2e-flow-extract` | 抽离/维护业务流程，并将确认后的流程设为 `ready`。 |
 | ② | `e2e-flow-center` | 提供完整流程校验器与临时只读看板。 |
 | ③ | `e2e-test-gen` | 本 Skill：写、修并实跑 Playwright 测试；仅在通过后推进生命周期。 |
-| ④ | `e2e-evidence` | 运行 `active` 流程、收集证据、解释失败，并在获得明确同意后启用流程。 |
+| ④ | `e2e-evidence` | 运行 `active` 流程、收集证据并解释失败。 |
 
-- 只写通过完整 Schema 校验的 `test.spec` 指向的 E2E 测试文件、③被授权的 `status: ready → active`，以及成功创建 spec 后同一路径的 `test.source: external → existing`。不要改业务代码、其他流程字段、`review`、`enabled`、`playwright.config`、依赖、锁文件或看板。
+- 只写通过完整 Schema 校验的 `test.spec` 指向的 E2E 测试文件、③被授权的 `status: ready → active`，以及成功创建 spec 后同一路径的 `test.source: external → existing`。不要改业务代码、其他流程字段、`review`、`playwright.config`、依赖、锁文件或看板。
 - 初次生成只接收已复读验证为 `ready` 的流程。`draft`、`retired`、无效 YAML 和未通过确认的流程一律移交①。
-- 已是 `active` 的流程只在用户明确要求补齐或复核测试时维护其 spec；保留现有 `status` 与 `enabled`，不得重复推进生命周期。
+- 已是 `active` 的流程只在用户明确要求补齐或复核测试时维护其 spec；保留现有 `status`，不得重复推进生命周期。
 - 测试数据只从 YAML 已登记的环境变量或安全数据源读取。不得硬编码账号、密码、token、Cookie、真实邮箱或请求头，也不得把它们输出到日志或报告。
 
 ## 开始前
@@ -60,11 +60,11 @@ description: 根据项目根 `e2e-flows/*.yaml` 和源码生成、补齐或修�
 
 1. 先报告并处理可由③解决的选择器或测试同步问题，再重跑；不要改业务代码来迁就测试。
 2. 失败、跳过、无法启动、缺少环境变量、不能收集所需数据或用户要求不运行时，保留原流程状态。对 `ready` 流程不得标记 `active`。
-3. 单文件全绿后，重新读取 YAML。只有它仍为 `ready` 且本次运行确实执行了该流程的测试，才将其写为 `status: active`；保留 `enabled: false` 和原有 `review`。
+3. 单文件全绿后，重新读取 YAML。只有它仍为 `ready` 且本次运行确实执行了该流程的测试，才将其写为 `status: active`；保留原有 `review`。
 4. 写入后重新读取并验证。目标流程自身的写入、复读、`status` / `review` 校验，或②完整校验中归属该流程的错误失败时，恢复到最后一个有效的 `ready` 快照并报告阻塞；回退失败时如实报告当前落盘状态。若完整校验仅报告无关流程错误，不伪造“项目全绿”，也不盲目回退已验证的目标流程。
-5. 维护既有 `active` 流程时不改 `status` / `enabled`；实跑失败则报告失败并移交④解释证据或①修订业务契约。
+5. 维护既有 `active` 流程时不改 `status`；实跑失败则报告失败并移交④解释证据或①修订业务契约。
 
-测试通过并变为 `active` 不等于允许运行：只有④在证据校验通过且用户明确同意时，才可设置 `enabled: true`。
+测试通过并变为 `active` 后，运行与证据收集由④负责，③不代跑。
 
 ## 汇报与移交
 
@@ -72,4 +72,4 @@ description: 根据项目根 `e2e-flows/*.yaml` 和源码生成、补齐或修�
 
 - 没有合格的 `ready` 流程或发现业务契约问题：移交① `e2e-flow-extract`。
 - 用户要看流程/报告或临时看板：移交② `e2e-flow-center`。
-- `active` 流程需要常规运行、截图/视频/Trace、失败解释或启用：移交④ `e2e-evidence`。
+- `active` 流程需要运行、截图/视频/Trace 或失败解释：移交④ `e2e-evidence`。

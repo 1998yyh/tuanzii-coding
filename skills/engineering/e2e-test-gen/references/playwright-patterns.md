@@ -27,6 +27,27 @@ test("已注册用户登录后看到工作台", async ({ page }) => {
 - 将 flow id 放入测试标题、describe 或文件名，确保④能稳定关联 `flowId → spec → step id`。
 - 使用 `expect` 的自动等待；不要用任意固定 sleep 掩盖页面未就绪。
 
+## 步骤证据截图
+
+每个 `test.step` 末尾（该步骤全部断言通过之后）留一张全页截图，按 YAML 步骤 id 命名，供④归档到 `results/<run-id>/evidence/<flow-id>/`：
+
+```ts
+test("已注册用户登录后看到工作台", async ({ page }, testInfo) => {
+  await test.step("verify-dashboard：确认已进入工作台", async () => {
+    await expect(page.getByTestId("current-user")).toBeVisible();
+    await page.screenshot({
+      path: testInfo.outputPath("verify-dashboard.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
+  });
+});
+```
+
+- `animations: "disabled"` 把 CSS 动画/过渡快进到结束态：弹窗滑入等场景不会截到半态，也就不用为动画加固定 sleep（上节的禁令仍然有效）。
+- 截图是证据不是断言：不断言截图内容，也不用截图替代 `expect`。
+- 签名注入 `testInfo` 才能用 `testInfo.outputPath`；`test-finished-*.png` 兜底图由 config 的 `screenshot: "on"` 自动产出，与步骤截图不冲突。
+
 ## 选择器与断言
 
 优先顺序：`getByRole`（带可访问名称）→ `getByLabel` → `getByTestId` → 稳定用户文本。只有源码无更稳定线索时才使用项目既有 selector；记录它需要复核，而不是编造新 CSS 结构。

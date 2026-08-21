@@ -43,12 +43,3 @@ def review_issues(review: Any, status: Any) -> list[tuple[str, str]]:
     if status in {"ready", "active"} and basis == "pending-user-confirmation":
         issues.append(("review.basis", "待人工确认的流程不能是 ready 或 active。"))
     return issues
-
-
-def enabled_issues(enabled: Any, status: Any) -> list[str]:
-    """The 'only active flows may be enabled' invariant for YAML docs and report snapshots."""
-    if type(enabled) is not bool:
-        return ["必须是布尔值。"]
-    if enabled and status != "active":
-        return ["只有 active 流程才可以启用。"]
-    return []

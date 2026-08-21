@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 
 from .affected import flow_impact, git_changed_paths
-from .common import LIFECYCLE_STATUSES, enabled_issues, is_relative_path, is_text, review_issues
+from .common import LIFECYCLE_STATUSES, is_relative_path, is_text, review_issues
 
 
 FLOW_ID_RE = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
@@ -55,6 +55,20 @@ class FlowRecord:
 
 def _issue(issues: list[Issue], field_name: str, message: str) -> None:
     issues.append(Issue(field_name, message))
+
+
+# test.step 名称必须以 kebab-case 步骤 id 开头（如 'open-login：打开登录页'），
+# 与③《Playwright 模式》的步骤映射约定一致，供本校验器机械核对 spec ↔ YAML 步骤
+SPEC_STEP_ID_RE = re.compile(r"test\.step\(\s*['\"]([a-z][a-z0-9]*(?:-[a-z0-9]+)*)")
+
+
+def _spec_step_ids(spec_path: Path) -> set[str]:
+    """抽取 spec 中 test.step('<id>…') 名称开头的步骤 id；读不到按空集处理。"""
+    try:
+        text = spec_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return set()
+    return set(SPEC_STEP_ID_RE.findall(text))
 
 
 def _contains_symlink(project_root: Path, path: Path) -> bool:
@@ -222,8 +236,6 @@ def validate_document(document: Any, project_root: Path, path: str) -> list[Issu
         _issue(issues, "priority", "必须为 P0、P1、P2 或 P3。")
     if document.get("status") not in LIFECYCLE_STATUSES:
         _issue(issues, "status", "必须为 draft、ready、active 或 retired。")
-    for message in enabled_issues(document.get("enabled"), document.get("status")):
-        _issue(issues, "enabled", message)
     _validate_review(document, issues)
 
     entry = document.get("entry")
@@ -264,6 +276,19 @@ def validate_document(document: Any, project_root: Path, path: str) -> list[Issu
         )
     elif test["source"] == "existing" and not (project_root / test["spec"]).is_file():
         _issue(issues, "test.spec", "标为 existing 的测试文件必须存在。")
+    elif test["source"] == "existing":
+        # spec 存在时机械核对：YAML 步骤 id 必须以名称前缀形式出现在 test.step 中
+        spec_step_ids = _spec_step_ids(project_root / test["spec"])
+        steps = document.get("steps")
+        if isinstance(steps, list):
+            for index, step in enumerate(steps):
+                step_id = step.get("id") if isinstance(step, dict) else None
+                if isinstance(step_id, str) and FLOW_ID_RE.fullmatch(step_id) and step_id not in spec_step_ids:
+                    _issue(
+                        issues,
+                        f"steps[{index}].id",
+                        f"spec 中缺少以 {step_id} 开头的 test.step（步骤 id 必须出现在 test.step 名称开头）。",
+                    )
     if "alwaysRunOnAffected" not in document or type(document.get("alwaysRunOnAffected")) is not bool:
         _issue(issues, "alwaysRunOnAffected", "必须是布尔值。")
     if "tags" in document and (not isinstance(document["tags"], list) or not all(is_text(tag) for tag in document["tags"])):
@@ -296,7 +321,7 @@ def _step_view(step: Any) -> dict[str, Any] | None:
 
 def flow_view(document: dict[str, Any]) -> dict[str, Any]:
     """Expose a dashboard-safe summary; fixtures and step data never leave the server."""
-    fields = ("id", "name", "description", "category", "persona", "goal", "priority", "status", "enabled", "entry", "paths", "sources", "test", "tags")
+    fields = ("id", "name", "description", "category", "persona", "goal", "priority", "status", "entry", "paths", "sources", "test", "tags")
     view = {key: document.get(key) for key in fields}
     view["steps"] = [
         step_view

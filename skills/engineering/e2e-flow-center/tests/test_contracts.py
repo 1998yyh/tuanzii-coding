@@ -26,7 +26,6 @@ persona: 已注册用户
 goal: 登录后看到工作台。
 priority: P0
 status: ready
-enabled: false
 review:
   mode: manual
   basis: user-confirmed
@@ -166,10 +165,9 @@ class ContractTests(unittest.TestCase):
             change["lifecycle"] = {
                 "before": {
                     "status": "ready",
-                    "enabled": False,
                     "review": {"mode": "manual", "basis": "user-confirmed"},
                 },
-                "after": {"status": "retired", "enabled": False},
+                "after": {"status": "retired"},
             }
             change["nextAction"] = "no-action"
             report["summary"].update(createdFlowCount=0, retiredFlowCount=1, readyFlowCount=0, draftFlowCount=0, blockedFlowCount=0)
@@ -208,7 +206,6 @@ class ContractTests(unittest.TestCase):
         def handoff_action_mismatch(report: dict) -> None:
             report["flowChanges"][0]["lifecycle"]["after"] = {
                 "status": "ready",
-                "enabled": False,
                 "review": {"mode": "manual", "basis": "user-confirmed"},
             }
             report["flowChanges"][0]["nextAction"] = "no-action"
@@ -247,7 +244,6 @@ class ContractTests(unittest.TestCase):
             change = report["flowChanges"][0]
             change["lifecycle"]["after"] = {
                 "status": "ready",
-                "enabled": False,
                 "review": {
                     "mode": "source-validated",
                     "basis": "source-evidence-and-schema-validation",

@@ -245,7 +245,6 @@ function renderDetail() {
   }
   if (flow.priority) badges.append(badge(flow.priority));
   for (const tag of flow.tags || []) badges.append(badge(tag));
-  badges.append(badge(flow.enabled ? "已启用" : "未启用", flow.enabled ? "ok" : ""));
   hero.append(badges);
   pane.append(hero);
 
@@ -599,9 +598,6 @@ function reportDrift(change, flowsById) {
   const diffs = [];
   if (current.status && current.status !== after.status) {
     diffs.push(`${STATUS_LABELS[after.status] || after.status} → ${STATUS_LABELS[current.status] || current.status}`);
-  }
-  if (typeof current.enabled === "boolean" && current.enabled !== after.enabled) {
-    diffs.push(current.enabled ? "当前已启用" : "当前已停用");
   }
   return diffs.length ? diffs.join(";") : null;
 }
