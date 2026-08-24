@@ -2,6 +2,12 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [4.4.0] - 2026-08-21
+
+### 变更
+
+- `wayfinder` 的 `grilling` 会话提问节奏由"一轮问完整个 frontier"改为一次一问：新增「一次一问」小节，约束绘制地图与消解 ticket 中的所有追问——一次只抛一个问题，答后再挑下一个；Grilling ticket 类型条目补充指向该小节的交叉引用。`grilling` 本体及其余入口（`grill-me`、`grill-with-docs`）节奏不变。
+
 ## [4.3.0] - 2026-08-21
 
 ### 变更

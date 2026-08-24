@@ -76,8 +76,12 @@ Wayfinder 默认是 **规划**：每张 ticket 消解一个决定，当道路清
 
 - **Research**（AFK）：阅读文档、第三方 API 或本地资源（如知识库），挖出一个决定所等待的事实。由 `tuanzii:research` **子 agent** 消解。当需要当前工作目录之外的知识时使用。
 - **Prototype**（HITL）：通过做一个便宜、粗糙、具体的可讨论 artifact 来提高讨论的真实度 —— 大纲、粗略初稿、stub，或通过 tuanzii:prototype skill 做的 UI/逻辑代码。把 prototype 作为资产链接上来。当关键问题是"它应该长什么样"或"它应该怎么表现"时使用。
-- **Grilling**（HITL）：对话。默认情形。总是调用 `tuanzii:grilling` 和 `tuanzii:domain-modeling` skill。
+- **Grilling**（HITL）：对话。默认情形。总是调用 `tuanzii:grilling` 和 `tuanzii:domain-modeling` skill，提问节奏按 [一次一问](#一次一问)。
 - **Task**（HITL 或 AFK）：必须先完成、才能做出某个 _决定_ 的手工工作 —— 没什么可决定、可原型、可研究的，但讨论被它卡住。注册某个服务以便评估它的 API、开通访问权限、搬运数据以便看清它的形状。这是唯一 _做事_ 而非 _做决定_ 的类型 —— 它靠解锁一个决定赢得自己的位置，而不是靠交付终点。agent 能做就独自驱动（AFK）；否则给人类一份精确的清单（HITL）。工作完成即消解；答案记录做了什么以及后续 ticket 依赖的事实（凭据位置、新 URL、行数）。
+
+## 一次一问
+
+本 skill 调用的每一场 `tuanzii:grilling` 会话都 **一次只问一个问题**：从 frontier 挑出当前最关键的一个抛给用户，等回答，再据答案挑下一个。不要按 `grilling` 的默认节奏把整个 frontier 编号成一轮抛出 —— wayfinding 是逐步探路，不是批量问卷；问题成堆糊脸只会换来漏答和乱答。
 
 ## 战争迷雾
 
