@@ -2,6 +2,13 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [4.4.1] - 2026-08-24
+
+### 文档
+
+- CLAUDE.md 版本号升级规则规范化：级别判定由一句话改为对照表，列明 major/minor/patch 各自触发条件并附历史示例（4.0.0、4.3.0、3.3.1 等），补充同一 commit 含多类变更时取最高级别的裁定规则。
+- 固化 changelog 条目格式：`## [x.y.z] - YYYY-MM-DD` 起头 + 「破坏性变更 / 新增 / 变更 / 修复 / 文档」分类小节；三层边界模型「必须执行」条目补齐 changelog 登记要求。
+
 ## [4.4.0] - 2026-08-21
 
 ### 变更

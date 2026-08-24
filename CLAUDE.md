@@ -124,7 +124,17 @@ python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
 
 ## 开发规则
 
-- **提交前必须升级版本号**：每次 `git commit` 之前，先升级 `.claude-plugin/plugin.json` 中的 `version`（遵循语义化版本：新功能 minor、修复 patch、破坏性变更 major），并同步升级 `.claude-plugin/marketplace.json` 的 `metadata.version`（两处独立维护，需手动保持一致），同时在 `changelog.md` 顶部登记对应版本条目。注意 `package.json` 的 `version` 是另一套独立编号，不参与插件发布。
+- **提交前必须升级版本号**：每次 `git commit` 之前，先升级 `.claude-plugin/plugin.json` 中的 `version`（判定规则见下方对照表），并同步升级 `.claude-plugin/marketplace.json` 的 `metadata.version`（两处独立维护，需手动保持一致），同时在 `changelog.md` 顶部按格式登记新版本条目。注意 `package.json` 的 `version` 是另一套独立编号，不参与插件发布。
+
+  **级别判定对照表**（同一 commit 含多类变更时，取最高级别）：
+
+  | 级别 | 触发条件 | 历史示例 |
+  |------|----------|----------|
+  | **major**（破坏性） | 删除/重命名已发布的 skill 或 output style；skill 调用契约不兼容变更（frontmatter 调用方式变化、命令入口改名）；marketplace 结构变更导致旧安装/发现方式失效 | 4.0.0 移除 8 个 skill、`brainstorming` 加 `disable-model-invocation` |
+  | **minor**（新功能/行为演进） | 新增 skill / output style；skill 能力增强（新增章节、脚本、行为或契约字段）；看板新功能；行为语义变化但向后兼容（旧数据不报错） | 4.3.0 移除 `enabled` 字段（旧 YAML 静默忽略）、4.1.0 报告叙事视图 |
+  | **patch**（修复） | 行为缺陷修复；文档与实现矛盾的勘误；契约补齐但不新增能力；typo 与纯文档润色 | 3.3.1 枚举补齐与文档勘误、4.1.0 清单重复条目移除 |
+
+  **changelog 条目格式**：`## [x.y.z] - YYYY-MM-DD` 起头，正文按「破坏性变更 / 新增 / 变更 / 修复 / 文档」分类小节组织（无内容的小节省略），每条写清改了什么、影响哪些 skill，行为变化需说明对旧数据/旧用法的兼容处理。
 - **Skill 清单必须同步**：新增、删除或重命名 `skills/*/*` 时，同步更新 `.claude-plugin/plugin.json` 的 `skills` 数组与本文件；若条目衍生自外部项目，还要同步对应 `NOTICE.<来源>.md`。
 
 ## 环境特殊规范
@@ -143,7 +153,7 @@ python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
 
 ### ✅ 必须执行
 
-- `git commit` 前升级 `.claude-plugin/plugin.json` 的 `version`，并同步 `marketplace.json` 的 `metadata.version`（见「开发规则」）
+- `git commit` 前按对照表升级 `.claude-plugin/plugin.json` 的 `version`，同步 `marketplace.json` 的 `metadata.version` 并在 `changelog.md` 顶部登记条目（级别判定见「开发规则」）
 - 新增衍生自外部项目的内容时，创建/更新对应 `NOTICE.<来源>.md` 归属文件（照 `NOTICE.superpowers.md` 格式）
 - 修改 superpowers 衍生 skill 时，注解统一用 `【老王注】` 前缀（md 用 `> ` 引用块、脚本用对应注释语法），保持 `grep '【老王注】'` 可速览、`grep -v '【老王注】'` 可还原
 - skill 的 frontmatter `name:` 必须与所在文件夹同名（如 `skills/process/brainstorming/` 对应 `name: brainstorming`），否则 Claude Code 无法发现
@@ -276,5 +286,5 @@ python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.12
-**最后更新**: 2026-08-21
+**版本**: v1.13
+**最后更新**: 2026-08-24
