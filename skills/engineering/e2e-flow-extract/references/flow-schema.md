@@ -185,7 +185,7 @@ alwaysRunOnAffected: true
 
 - `paths` 用于 Git 影响分析，应覆盖实现该业务目标的主要目录；不要使用 `**` 这种无边界 glob。
 - `sources` 是本次推断的证据文件，必须真实存在。它可以包含路由、页面、控制器、测试或 README。
-- `test.spec` 是预期或现有 E2E spec 的项目相对路径。它必须位于顶层 `e2e/`、`playwright/`，或 `test(s)/e2e/`、`test(s)/playwright/` 下，且文件名为 `*.e2e.<js|ts|jsx|tsx|mjs|cjs|mts|cts>` 或 `*.spec.<js|ts|jsx|tsx|mjs|cjs|mts|cts>`；路径中的任何目录和最终文件都不得是符号链接。这能避免③把业务源码误认为可写测试文件。`test.source: external` 表示①登记了待③创建的落点；`existing` 表示该 spec 已存在。③成功创建 `test.spec` 后，只可把同一路径的 `test.source` 从 `external` 改为 `existing`，不改动其他流程语义。`existing` 的 spec 必须存在。
+- `test.spec` 是预期或现有 E2E spec 的项目相对路径，文件名必须为 `*.e2e.<js|ts|jsx|tsx|mjs|cjs|mts|cts>` 或 `*.spec.<js|ts|jsx|tsx|mjs|cjs|mts|cts>`；路径中的任何目录和最终文件都不得是符号链接。允许的落点：顶层 `e2e/`、`playwright/`、`test/`、`tests/`（含 Playwright 默认的 `tests/*.spec.ts`）；以及 `apps|packages|services/<包名>/…/e2e|playwright/`（如 `apps/web/e2e/login.spec.ts`）。`src/` 下的业务文件或单元测试一律拒绝（包括 `src/e2e/App.spec.ts` 和 `apps/web/src/e2e/`）。`test.source: external` 表示①登记了待③创建的落点；`existing` 表示该 spec 已存在。③成功创建 `test.spec` 后，只可把同一路径的 `test.source` 从 `external` 改为 `existing`，不改动其他流程语义。`existing` 的 spec 必须存在。
 - `alwaysRunOnAffected: true` 只表示命中影响路径时的默认入选建议，不改变 `status`，也不代表流程会被自动运行；运行哪些 `active` 流程由调用④时决定。
 
 ## 生命周期和变更规则
@@ -211,4 +211,4 @@ ready / active --业务语义变化，①更新--> draft
 
 ## 轻量自检
 
-没有②的完整校验器时，①至少检查：文件名与 id 一致、必填字段存在、enum 合法、步骤 id 唯一、来源文件存在、路径是相对路径、`test.spec` 是受限 E2E spec 路径、`fixtures` 只有受限结构且 `data` 只引用其 `env` 别名、review 与 status 一致，以及 `test.source` 为 `existing` 且 spec 存在时每个步骤 id 都以名称前缀形式出现在该 spec 的 `test.step` 中。人工模式下新建/语义更新流程处于 `draft`。自动模式缺少②的完整校验器时，流程也必须保持 `draft`。完整校验器可用时，它是可执行事实；本文件必须随之更新。
+没有②的完整校验器时，①至少检查：文件名与 id 一致、必填字段存在、enum 合法、步骤 id 唯一、来源文件存在、路径是相对路径、`test.spec` 符合本文件的 E2E spec 落点、`fixtures` 只有受限结构且 `data` 只引用其 `env` 别名、review 与 status 一致，以及 `test.source` 为 `existing` 且 spec 存在时每个步骤 id 都以名称前缀形式出现在该 spec 的 `test.step` 中。人工模式下新建/语义更新流程处于 `draft`。自动模式缺少②的完整校验器时，流程也必须保持 `draft`。完整校验器可用时，它是可执行事实；本文件必须随之更新。

@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 import shutil
-import signal
 import tempfile
-import time
+
+from runtime import process_alive, stop_process_tree
 
 
 def trusted_session(path: Path) -> Path:
@@ -17,14 +16,6 @@ def trusted_session(path: Path) -> Path:
     if resolved.parent != temp_root or not resolved.name.startswith("e2e-flow-center-"):
         raise ValueError("会话目录必须是系统临时目录下的 e2e-flow-center-*。")
     return resolved
-
-
-def process_alive(pid: int) -> bool:
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    return True
 
 
 def stop_session(session: Path) -> str:
@@ -38,19 +29,9 @@ def stop_session(session: Path) -> str:
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
         return f"会话配置无效；为避免误删，未处理：{error}"
     if process_alive(pid):
-        try:
-            if os.getpgid(pid) != pgid:
-                return "进程组与会话记录不符；为避免误杀，未处理。"
-            os.killpg(pgid, signal.SIGTERM)
-            deadline = time.monotonic() + 4
-            while process_alive(pid) and time.monotonic() < deadline:
-                time.sleep(0.1)
-            if process_alive(pid):
-                os.killpg(pgid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        except PermissionError as error:
-            return f"无权限终止会话进程；保留目录：{error}"
+        error = stop_process_tree(pid, pgid)
+        if error:
+            return error
     shutil.rmtree(session)
     return "已停止并清理临时会话。"
 

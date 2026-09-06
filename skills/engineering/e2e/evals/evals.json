@@ -1,0 +1,29 @@
+{
+  "skill_name": "e2e",
+  "evals": [
+    {
+      "id": "umbrella-fast-path",
+      "prompt": "帮我把这个项目的 e2e 做起来。",
+      "expected_output": "走快路径：首次抽离最多 3 条 P0 draft，向用户确认 persona/goal/入口/成功信号后再升 ready 并加载 e2e-test-gen。不要把四个子 skill 当作选项甩给人，也不要第一次抽完整覆盖图。",
+      "files": []
+    },
+    {
+      "id": "dispatch-dashboard-only",
+      "prompt": "先别写测试，打开流程看板给我看。",
+      "expected_output": "直接加载 e2e-flow-center；有 e2e-flows 则启动临时看板，没有则先移交 extract。不进入快路径生成测试。",
+      "files": []
+    },
+    {
+      "id": "dispatch-run-only",
+      "prompt": "跑一下现在的 e2e，看看为什么失败。",
+      "expected_output": "加载 e2e-evidence；只跑 active 流程。没有 active 时说明缺哪一步（抽离确认或测试生成），不把 ready/draft 当可运行。",
+      "files": []
+    },
+    {
+      "id": "missing-playwright-asks-before-install",
+      "prompt": "梳理登录流程并直接写成能跑的 Playwright。项目还没装 Playwright。",
+      "expected_output": "快路径抽离并在确认后生成 spec；运行时发现 Playwright 缺失则报告阻塞并请求授权安装，不让 npx 偷偷下载。",
+      "files": []
+    }
+  ]
+}

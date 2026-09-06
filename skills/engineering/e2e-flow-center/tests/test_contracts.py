@@ -89,12 +89,50 @@ class ContractTests(unittest.TestCase):
             self.assertFalse(records[0].valid)
             self.assertTrue(any(issue.field == "test.spec" for issue in records[0].issues))
 
+    def test_accepts_playwright_default_spec_under_tests(self) -> None:
+        temp, root = self.project()
+        with temp:
+            valid = VALID_FLOW.replace("tests/e2e/user-login.spec.js", "tests/user-login.spec.ts")
+            (root / "e2e-flows/user-login.yaml").write_text(valid, encoding="utf-8")
+            records = load_flows(root)
+            self.assertTrue(records[0].valid, records[0].issues)
+
+    def test_accepts_monorepo_app_e2e_spec(self) -> None:
+        temp, root = self.project()
+        with temp:
+            valid = VALID_FLOW.replace("tests/e2e/user-login.spec.js", "apps/web/e2e/user-login.spec.ts")
+            (root / "e2e-flows/user-login.yaml").write_text(valid, encoding="utf-8")
+            records = load_flows(root)
+            self.assertTrue(records[0].valid, records[0].issues)
+
+    def test_accepts_scoped_package_playwright_spec(self) -> None:
+        temp, root = self.project()
+        with temp:
+            valid = VALID_FLOW.replace("tests/e2e/user-login.spec.js", "packages/@acme/ui/playwright/login.spec.ts")
+            (root / "e2e-flows/user-login.yaml").write_text(valid, encoding="utf-8")
+            records = load_flows(root)
+            self.assertTrue(records[0].valid, records[0].issues)
+
+    def test_rejects_src_segment_inside_workspace_e2e_spec(self) -> None:
+        temp, root = self.project()
+        with temp:
+            invalid = VALID_FLOW.replace("tests/e2e/user-login.spec.js", "apps/web/src/e2e/App.spec.ts")
+            (root / "e2e-flows/user-login.yaml").write_text(invalid, encoding="utf-8")
+            records = load_flows(root)
+            self.assertFalse(records[0].valid)
+            self.assertTrue(any(issue.field == "test.spec" for issue in records[0].issues))
+
     def test_rejects_spec_symlink_to_application_source(self) -> None:
         temp, root = self.project()
         with temp:
             spec = root / "tests/e2e/user-login.spec.js"
             spec.parent.mkdir(parents=True)
-            spec.symlink_to("../../src/auth/login.ts")
+            try:
+                spec.symlink_to("../../src/auth/login.ts")
+            except OSError as error:
+                if getattr(error, "winerror", None) == 1314:
+                    self.skipTest("当前 Windows 会话没有创建符号链接的特权。")
+                raise
             invalid = VALID_FLOW.replace("source: external", "source: existing")
             (root / "e2e-flows/user-login.yaml").write_text(invalid, encoding="utf-8")
             records = load_flows(root)
@@ -389,7 +427,12 @@ class RunManifestTests(unittest.TestCase):
             outside = root.parent / f"{root.name}-outside.txt"
             outside.write_text("secret\n", encoding="utf-8")
             try:
-                (root / "results" / "link.txt").symlink_to(outside)
+                try:
+                    (root / "results" / "link.txt").symlink_to(outside)
+                except OSError as error:
+                    if getattr(error, "winerror", None) == 1314:
+                        return
+                    raise
                 self.assertIsNone(resolve_under_results(root, "results/link.txt"))
             finally:
                 outside.unlink()

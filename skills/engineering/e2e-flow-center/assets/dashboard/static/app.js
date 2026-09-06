@@ -150,7 +150,7 @@ function renderCatalog() {
     groups.get(category).push(record);
   }
   if (!groups.size) {
-    nav.append(element("p", state.query ? "没有匹配的流程。" : "没有发现 .yaml 流程文件；请先由 e2e-flow-extract 抽离业务流程。", "empty-copy"));
+    nav.append(element("p", state.query ? "没有匹配的流程。" : "没有发现 .yaml 流程文件。回到对话用 e2e 入口抽离业务流程（/tuanzii:e2e）。", "empty-copy"));
   }
   for (const [category, records] of groups) {
     const group = element("section", undefined, "flow-group");
@@ -207,7 +207,7 @@ function renderDetail() {
   if (!record) {
     if (!(state.payload?.flows || []).length) {
       const empty = element("div", undefined, "empty-state");
-      empty.append(icon("listChecks", 24), element("h2", "暂无流程"), element("p", "由 e2e-flow-extract 抽离业务流程后，这里会显示流程目录。"));
+      empty.append(icon("listChecks", 24), element("h2", "暂无流程"), element("p", "看板只读。回到对话使用 /tuanzii:e2e 抽离业务流程后，这里会显示流程目录。"));
       pane.append(empty);
     } else {
       pane.append(element("p", "选择左侧流程查看详情。", "empty"));
@@ -247,6 +247,13 @@ function renderDetail() {
   for (const tag of flow.tags || []) badges.append(badge(tag));
   hero.append(badges);
   pane.append(hero);
+  if (flow.status === "draft") {
+    pane.append(element("p", "草稿待确认。回到对话说明「这条没问题，去写测试」。看板只读，不能在此确认或生成测试。", "empty-copy"));
+  } else if (flow.status === "ready") {
+    pane.append(element("p", "已就绪。回到对话用 e2e-test-gen 或 /tuanzii:e2e 生成并实跑 Playwright。", "empty-copy"));
+  } else if (flow.status === "active") {
+    pane.append(element("p", "已激活。回到对话用 e2e-evidence 或 /tuanzii:e2e 说「跑一下」来归档证据。", "empty-copy"));
+  }
 
   if (!record.valid) pane.append(diagnosticsSection(record));
 
@@ -323,7 +330,7 @@ function renderRunList() {
   const list = $("#run-list");
   list.replaceChildren();
   if (!state.runs.length) {
-    list.append(element("p", "暂无运行记录。由 e2e-evidence 运行流程后，结果会写入项目 results/ 目录。", "empty-copy"));
+    list.append(element("p", "暂无运行记录。回到对话对已激活流程运行 e2e-evidence，或用 /tuanzii:e2e 说「跑一下」。", "empty-copy"));
     return;
   }
   for (const run of state.runs) {
@@ -530,7 +537,7 @@ async function refreshFlows() {
   if (!records.some((record) => flowKey(record) === state.activeKey)) {
     state.activeKey = records.length ? flowKey(records[0]) : null;
   }
-  const projectName = String(payload.project || "").split("/").filter(Boolean).pop() || "当前项目";
+  const projectName = String(payload.project || "").split(/[/\\]/).filter(Boolean).pop() || "当前项目";
   $("#project-summary").textContent = `${projectName} · ${payload.validFlowCount} 条结构有效，${payload.invalidFlowCount} 条需处理`;
   renderCatalog();
   renderDetail();
@@ -768,7 +775,7 @@ function renderReport(report) {
 async function renderReports() {
   const payload = await api("/api/extraction-reports");
   const list = $("#report-list"); list.replaceChildren();
-  if (!payload.reports.length) { list.append(element("p", "尚无抽离报告。由①完成抽离后会写入不可变 JSON 快照。", "empty")); return; }
+  if (!payload.reports.length) { list.append(element("p", "尚无抽离报告。回到对话用 /tuanzii:e2e 抽离后会写入不可变 JSON 快照。", "empty")); return; }
   const params = new URLSearchParams(location.search); const requested = params.get("report");
   const valid = payload.reports.filter((report) => report.valid);
   for (const report of payload.reports) {

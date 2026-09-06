@@ -1,0 +1,7 @@
+interface:
+  display_name: E2E 入口
+  short_description: 端到端业务流程的统一入口：分流到抽离、看板、测试生成或证据归档
+  default_prompt: 把当前项目的端到端测试做起来：先抽核心流程，确认后再写 Playwright。
+
+policy:
+  allow_implicit_invocation: true

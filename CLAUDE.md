@@ -19,7 +19,7 @@ claude plugin install tuanzii@tuanzii
 
 ```
 .claude-plugin/
-  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 40 个 skill 路径
+  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 41 个 skill 路径
   marketplace.json       # 本地 marketplace 清单（新版 Claude Code 市场规范要求，含独立 metadata.version）
 skills/                  # Skills 目录，按用途分组子目录，每个 skill 一个文件夹，入口为 SKILL.md
   git/                   # Git 工具（7 个）
@@ -37,7 +37,7 @@ skills/                  # Skills 目录，按用途分组子目录，每个 ski
     grill-me/            # /grill-me 入口（user-invoked）
     grill-with-docs/     # /grill-with-docs 入口：追问 + 沉淀文档（user-invoked）
     domain-modeling/     # 领域建模：CONTEXT.md 词汇表与 ADR（含格式文档）
-  engineering/           # 工程流水线与 E2E 流程管理（19 个；其中 15 个衍生自 mattpocock/skills ※）
+  engineering/           # 工程流水线与 E2E 流程管理（20 个；其中 15 个衍生自 mattpocock/skills ※）
     ask-matt/            # skill 路由入口
     codebase-design/     # 深模块设计共享词汇库
     code-review/         # 双轴评审（规范 + spec）
@@ -53,6 +53,7 @@ skills/                  # Skills 目录，按用途分组子目录，每个 ski
     wayfinder/           # 超大规模工作的决策工单地图
     wizard/              # 生成交互式 bash 向导（含 template.sh）
     setup-matt-pocock-skills/  # 工程流水线一次性初始化
+    e2e/                 # E2E 统一入口（分流 + 快路径）
     e2e-flow-extract/    # 从源码抽离和维护 E2E 业务流程 YAML
     e2e-flow-center/     # E2E 流程 Schema 校验与临时只读看板
     e2e-test-gen/        # 为 ready 流程生成并验证 Playwright 测试
@@ -90,7 +91,7 @@ package.json             # Node 依赖管理（commonjs，当前无运行时依�
 
 （※ = 衍生自 mattpocock/skills v1.2.3，全中文重写；mattpocock 系 skill 各含 `agents/openai.yaml` Codex 兼容文件，保持英文原样）
 
-仓库根级无构建系统、无 lint 工具，项目主体是纯脚手架。唯一例外：`skills/engineering/e2e-flow-center` 自带 FastAPI 看板应用（`assets/dashboard/pyproject.toml`，FastAPI + uvicorn + PyYAML，Python ≥3.11，src layout 靠测试内 `sys.path` 注入）和 25 项 unittest 契约测试（`tests/test_contracts.py`）——改动该看板后必须跑测试，命令见「可执行验证命令」。
+仓库根级无构建系统、无 lint 工具，项目主体是纯脚手架。唯一例外：`skills/engineering/e2e-flow-center` 自带 FastAPI 看板应用（`assets/dashboard/pyproject.toml`，FastAPI + uvicorn + PyYAML，Python ≥3.11，src layout 靠测试内 `sys.path` 注入）和 unittest 契约测试（`tests/test_contracts.py`、`tests/test_runtime.py`）——改动该看板后必须跑测试，命令见「可执行验证命令」。
 
 ## 核心架构：插件发现与加载
 
@@ -118,8 +119,9 @@ sh -n skills/process/brainstorming/scripts/start-server.sh skills/process/brains
 # 检查补丁中的空白错误
 git diff --check
 
-# 跑 e2e-flow-center 看板契约测试（25 项 unittest，改 dashboard 源码/契约后必跑）
-python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
+# 跑 e2e-flow-center 看板契约测试（改 dashboard 源码/契约/runtime 后必跑；python 与 python3 均可）
+python skills/engineering/e2e-flow-center/tests/test_contracts.py
+python skills/engineering/e2e-flow-center/tests/test_runtime.py
 ```
 
 ## 开发规则
@@ -171,10 +173,10 @@ python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
 
 ## 测试与验证
 
-仓库根级无自动化测试框架（`npm test` 是 `exit 1` 占位符）；唯一例外是 e2e-flow-center 看板的 25 项 unittest 契约测试。验证手段按场景：
+仓库根级无自动化测试框架（`npm test` 是 `exit 1` 占位符）；唯一例外是 e2e-flow-center 看板的 unittest 契约测试。验证手段按场景：
 
 - **skill 改动**：在 Claude Code 会话中用 `/tuanzii:<skill>` 触发验证；若本机仍走旧缓存符号链接则改动即时生效，否则需等插件更新
-- **e2e-flow-center 看板改动**：先跑 `python3 skills/engineering/e2e-flow-center/tests/test_contracts.py`，再用 `python3 skills/engineering/e2e-flow-center/scripts/start_dashboard.py --project <含 e2e-flows/ 的项目根>` 实起看板人工验证
+- **e2e-flow-center 看板改动**：先跑 `python skills/engineering/e2e-flow-center/tests/test_contracts.py` 与 `python skills/engineering/e2e-flow-center/tests/test_runtime.py`，再用 `python skills/engineering/e2e-flow-center/scripts/start_dashboard.py --project <含 e2e-flows/ 的项目根>` 实起看板人工验证
 - **插件清单/版本号改动**：push 后在已安装机器上更新 marketplace 并用 `/plugins` 确认
 
 ## Skills
@@ -236,6 +238,7 @@ python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
 
 | Skill | 功能 |
 |-------|------|
+| `e2e` | 统一入口：按意图分流到下面四个 skill；完整链路默认走少量 P0 抽离 → 确认 → 生成测试 |
 | `e2e-flow-extract` | 从源码、路由、已有测试和产品文档抽离或维护端到端业务流程 YAML，并写审计报告；支持 manual / source-validated 双验收模式 |
 | `e2e-flow-center` | 完整校验 `e2e-flows/`，并从临时 localhost 三栏看板查看流程详情、Git 影响徽章、运行历史与证据中心，及抽离报告 |
 | `e2e-test-gen` | 将已确认的 ready 流程转换为并验证 Playwright 测试；通过后推进为 active |
@@ -286,5 +289,5 @@ python3 skills/engineering/e2e-flow-center/tests/test_contracts.py
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.13
-**最后更新**: 2026-08-24
+**版本**: v1.14
+**最后更新**: 2026-09-06

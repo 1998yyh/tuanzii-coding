@@ -9,43 +9,19 @@ import secrets
 import shutil
 import socket
 import subprocess
-import sys
 import tempfile
 import time
 import urllib.request
-import venv
 import webbrowser
 
-
-SKILL_ROOT = Path(__file__).resolve().parents[1]
-DASHBOARD_TEMPLATE = SKILL_ROOT / "assets" / "dashboard"
+from cleanup_stale_sessions import cleanup_project_sessions
+from runtime import DASHBOARD_TEMPLATE, ensure_runtime_python, stop_process_tree
 
 
 def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         probe.bind(("127.0.0.1", 0))
         return int(probe.getsockname()[1])
-
-
-def runtime_python() -> Path:
-    """Keep FastAPI in the user cache, never in the target project."""
-    override = os.environ.get("E2E_FLOW_CENTER_PYTHON")
-    if override:
-        return Path(override)
-    cache_dir = Path.home() / ".cache" / "e2e-flow-center" / "runtime"
-    executable = cache_dir / "bin" / "python"
-    if not executable.exists():
-        cache_dir.parent.mkdir(parents=True, exist_ok=True)
-        venv.EnvBuilder(with_pip=True, clear=False).create(cache_dir)
-    probe = subprocess.run([str(executable), "-c", "import fastapi, uvicorn, yaml"], capture_output=True)
-    if probe.returncode != 0:
-        result = subprocess.run(
-            [str(executable), "-m", "pip", "install", "--disable-pip-version-check", str(DASHBOARD_TEMPLATE)],
-            text=True,
-        )
-        if result.returncode != 0:
-            raise RuntimeError("无法在用户缓存安装 e2e-flow-center 的 Python 依赖。")
-    return executable
 
 
 def health_check(port: int, token: str, timeout: float = 12.0) -> bool:
@@ -73,11 +49,9 @@ def main() -> int:
     if not (project / "e2e-flows").is_dir():
         parser.error("项目没有 e2e-flows/；请先使用 e2e-flow-extract。")
 
-    from cleanup_stale_sessions import cleanup_project_sessions
-
     cleanup_project_sessions(project)
     session = Path(tempfile.mkdtemp(prefix="e2e-flow-center-"))
-    runtime = runtime_python()
+    runtime = ensure_runtime_python(("fastapi", "uvicorn", "yaml"))
     dashboard = session / "dashboard"
     shutil.copytree(DASHBOARD_TEMPLATE, dashboard)
     port, token = free_port(), secrets.token_urlsafe(32)
@@ -92,7 +66,7 @@ def main() -> int:
     config = {"project": str(project), "port": port, "token": token, "pid": process.pid, "pgid": process.pid, "startedAt": time.time()}
     (session / "session.config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
     if not health_check(port, token):
-        process.terminate()
+        stop_process_tree(process.pid, process.pid)
         raise RuntimeError(f"看板健康检查失败；临时会话保留在 {session} 以便诊断。")
     url = f"http://127.0.0.1:{port}/?token={token}"
     print(json.dumps({"url": url, "session": str(session)}, ensure_ascii=False))

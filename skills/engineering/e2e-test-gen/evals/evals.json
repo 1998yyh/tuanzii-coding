@@ -16,7 +16,7 @@
     {
       "id": "reject-unsafe-test-spec-and-literal-data",
       "prompt": "这条 ready 流程把 test.spec 写成 src/e2e/App.spec.ts，并在 fixtures.password 和 steps[].data 里填了字面量。直接生成测试。",
-      "expected_output": "完整校验拒绝该流程；不创建或修改 src/e2e/App.spec.ts，不读取或输出字面量数据。说明 test.spec 必须位于顶层 e2e/playwright 或 test(s)/e2e/playwright 下，且为 *.e2e.* 或 *.spec.* 文件；测试数据只能引用 fixtures.env.<别名>。",
+      "expected_output": "完整校验拒绝该流程；不创建或修改 src/e2e/App.spec.ts，不读取或输出字面量数据。说明 test.spec 不能落在 src/ 下，必须位于顶层 e2e/playwright/test/tests 或 apps|packages|services/<包名>/…/e2e|playwright/，且为 *.e2e.* 或 *.spec.* 文件；测试数据只能引用 fixtures.env.<别名>。",
       "files": []
     },
     {

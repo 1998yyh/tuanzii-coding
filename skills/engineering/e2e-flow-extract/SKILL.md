@@ -1,6 +1,6 @@
 ---
 name: e2e-flow-extract
-description: 从源码、路由、已有测试和产品文档中抽离或维护端到端业务流程。用户要求“梳理核心业务流程”“有哪些端到端场景”“把流程抽成 YAML”，或说明新项目从未建流程、旧项目新增功能、已有流程的业务行为发生变化时使用。将流程写入项目根 e2e-flows/，只产出或更新业务流程定义；不要用于生成 Playwright 测试、启动临时看板、运行测试或排查失败。
+description: 从源码、路由、已有测试和产品文档中抽离或维护端到端业务流程。用户要求“梳理核心业务流程”“有哪些端到端场景”“把流程抽成 YAML”，或说明新项目从未建流程、旧项目新增功能、已有流程的业务行为发生变化时使用。将流程写入项目根 e2e-flows/，只产出或更新业务流程定义。用户要同时写测试或跑测试时先走 e2e 入口；不要用于生成 Playwright 测试、启动临时看板、运行测试或排查失败。
 ---
 
 # E2E Flow Extract
@@ -105,17 +105,17 @@ description: 从源码、路由、已有测试和产品文档中抽离或维护�
 - `sources` 和 `paths` 均为项目根相对路径；每个 `sources` 文件真实存在且被本次分析使用。
 - 每个步骤都有用户可理解的标题和可观察的 `expected`；每个 `signal` 在源码中有依据。
 - `fixtures` 只能使用 Schema 的 `env` / `sources` 受限结构；`steps[].data` 只能引用已登记的 `fixtures.env.<别名>`，不放入任何真实值。
-- `test.spec` 必须是 Schema 允许的 E2E spec 路径；路径不合规时不要创建或改写任何文件。
+- `test.spec` 必须符合 Schema 的 E2E spec 落点（顶层 `e2e/` / `playwright/` / `test/` / `tests/`，或 monorepo 的 `apps|packages|services/<包名>/…/e2e|playwright/`）；路径不合规时不要创建或改写任何文件。优先沿用项目已有 Playwright `testDir`，不要为了套件另起一套目录。
 - 人工模式下新建或业务语义更新的流程都是 `draft`；自动模式下只有通过全部证据与 Schema 门槛的条目可成为 `ready`。
 - 仅实现层变化时，不伪造语义更新，不创建重复流程，也不改变 `status`。
 
-完整校验器属于② `e2e-flow-center` Skill，不属于目标项目。②可用时，从它的 Skill 目录调用：
+完整校验器属于② `e2e-flow-center` Skill，不属于目标项目。②可用时，从它的 Skill 根调用（与本 Skill 同级的 `e2e-flow-center/`）：
 
 ```bash
-python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
+python <e2e-flow-center Skill 根>/scripts/validate.py --project <target-root>
 ```
 
-不要在目标项目中查找或安装②。②不可用时只做上述轻量自检，并在报告中写入 `validation.level: unavailable`；`approvalMode: source-validated` 下必须保持 `draft`，不得自动验收或移交③。
+`python` 与 `python3` 均可；脚本缺 PyYAML 时会启用用户缓存 runtime，不往目标项目装依赖。不要在目标项目中查找或安装②。②不可用时只做上述轻量自检，并在报告中写入 `validation.level: unavailable`；`approvalMode: source-validated` 下必须保持 `draft`，不得自动验收或移交③。
 
 ## 确认、自动验收与状态推进
 
@@ -229,3 +229,4 @@ handoff:
 - 用户已确认业务语义并希望生成或补齐 Playwright 测试：先按“确认后交给③的硬协议”把已确认流程持久化为 `ready`，原子写入包含 `readyFlowIds` 的报告后，携带该 `report-id` 移交 `e2e-test-gen`。
 - 用户希望查看影响范围、流程目录、临时 Web 看板或抽离报告页面：先确认 `e2e-flow-reports/<report-id>.json` 已原子写入，再移交 `e2e-flow-center`。
 - 用户要求运行、重跑、收集截图/Trace 或解释失败：移交 `e2e-evidence`。
+- 用户要的是完整链路（抽离并写测试、把 e2e 做起来）而不是只要抽离：移交 `e2e`。

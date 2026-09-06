@@ -34,15 +34,15 @@ description: 根据项目根 `e2e-flows/*.yaml` 和源码生成、补齐或修�
 4. 使用②的完整校验器（可用时）校验流程：
 
    ```bash
-   python3 <e2e-flow-center-skill>/scripts/validate.py --project <target-root>
+   python <e2e-flow-center Skill 根>/scripts/validate.py --project <target-root>
    ```
 
-   ②不可用时完成轻量自检并明确说明；无效流程不得生成或推进。不要在目标项目中寻找或安装②。
+   `python` 与 `python3` 均可；脚本缺 PyYAML 时会启用用户缓存 runtime。②不可用时完成轻量自检并明确说明；无效流程不得生成或推进。不要在目标项目中寻找或安装②。
 5. 对每条流程重新读取 YAML，核对 `status`、`entry`、`fixtures`、`steps`、`signal`、`sources` 和 `test`。再读取路由、页面、表单/状态逻辑及已有测试，确认真实交互与可观察结果。
 
 ## 生成与维护
 
-只有 `test.spec` 位于顶层 `e2e/`、`playwright/` 或 `test(s)/e2e/`、`test(s)/playwright/` 下、为 `*.e2e.*` 或 `*.spec.*` 的 JavaScript/TypeScript 文件，且从项目根到该文件的路径不含符号链接，才可按其项目相对路径写入 spec；完整校验失败时一律阻塞，不能把任意项目文件当测试修改。`test.source: external` 表示可创建该文件；`existing` 表示必须先读取并最小化修改已有文件。③创建 spec 并确认文件存在后，将同一 YAML 的 `test.source` 设为 `existing`；即使后续测试失败，真实存在的 spec 也不再是“待创建”。`external` 但文件已存在时，先读取它并同步为 `existing`。文件不存在、路径越界或项目没有可用的 Playwright 运行环境时，说明阻塞原因，不伪造通过结果。
+只有 `test.spec` 通过完整 Schema 的 E2E spec 落点校验（顶层 `e2e/` / `playwright/` / `test/` / `tests/`，或 `apps|packages|services/<包名>/…/e2e|playwright/`，文件名为 `*.e2e.*` 或 `*.spec.*`，路径不含符号链接）才可按其项目相对路径写入 spec。优先沿用项目 Playwright `testDir` 与已有 spec 目录，不要另起一套。完整校验失败时一律阻塞，不能把 `src/` 下的业务文件当测试修改。`test.source: external` 表示可创建该文件；`existing` 表示必须先读取并最小化修改已有文件。③创建 spec 并确认文件存在后，将同一 YAML 的 `test.source` 设为 `existing`；即使后续测试失败，真实存在的 spec 也不再是“待创建”。`external` 但文件已存在时，先读取它并同步为 `existing`。文件不存在、路径越界或项目没有可用的 Playwright 运行环境时，说明阻塞原因，不伪造通过结果。
 
 每条流程遵循以下规则：
 
@@ -73,3 +73,4 @@ description: 根据项目根 `e2e-flows/*.yaml` 和源码生成、补齐或修�
 - 没有合格的 `ready` 流程或发现业务契约问题：移交① `e2e-flow-extract`。
 - 用户要看流程/报告或临时看板：移交② `e2e-flow-center`。
 - `active` 流程需要运行、截图/视频/Trace 或失败解释：移交④ `e2e-evidence`。
+- 用户要的是完整链路而不是只要写测试：移交 `e2e`。

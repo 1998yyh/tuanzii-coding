@@ -6,6 +6,9 @@ import json
 from pathlib import Path
 import sys
 
+from runtime import reexec_if_needed
+
+reexec_if_needed(("yaml",), Path(__file__))
 
 SOURCE = Path(__file__).resolve().parents[1] / "assets" / "dashboard" / "src"
 sys.path.insert(0, str(SOURCE))

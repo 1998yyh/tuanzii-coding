@@ -41,6 +41,8 @@ disable-model-invocation: true
 
 - **有东西坏了** → **tuanzii:diagnosing-bugs**。专治硬骨头：第一眼看不穿的 bug、时有时无的 flake、在两个已知良好状态之间潜入的回归。在拿到**紧凑反馈回路**（一条已经能因*这个* bug 变红的命令）之前，它拒绝做任何理论推测；修复时附带回归测试。当事后复盘的真正结论是"没有好的 seam 可以锁住这个 bug"时，它会交接给 **tuanzii:improve-codebase-architecture**。
 
+- **要给产品补端到端测试** → **tuanzii:e2e**。统一入口：抽业务流程、确认后写 Playwright、跑证据、打开临时看板。不要让人在 extract / center / test-gen / evidence 四个子 skill 里挑。
+
 - **庞大而模糊的工作 —— 全新项目或超大特性，一个会话装不下** → **tuanzii:wayfinder**，这里认知负荷最高的一条流程。当从这里到目的地的路还看不见时，它在 issue tracker 上绘制一张由**决策 ticket** 组成的**共享地图**，然后逐个解决 —— 产出的是**决策，不是交付物** —— 直到迷雾被推开、道路清晰。tuanzii:grill-with-docs 打磨的是一个会话能装下的想法，wayfinder 对付的是装不下的 —— 它更慢、更重，所以只留给这种场景，界限清晰的特性永远不要用它。
 
   地图清晰后，**它交接，而不是直接开建**：在 **tuanzii:to-spec** 处汇入主流程，由它把地图上互链的决策收敛成可构建的计划，然后照常走 tuanzii:to-tickets 和 tuanzii:implement。把地图直接接进 tuanzii:implement 会跳过这个收敛、丢掉互链的细节 —— 只有当工作量最后证明确实很小时，才直接进 tuanzii:implement。

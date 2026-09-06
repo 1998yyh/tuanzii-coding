@@ -3,18 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 import shutil
 import tempfile
 
-
-def _alive(pid: int) -> bool:
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    return True
+from runtime import process_alive
 
 
 def cleanup_project_sessions(project: Path) -> list[str]:
@@ -34,7 +27,7 @@ def cleanup_project_sessions(project: Path) -> list[str]:
         except (OSError, ValueError, KeyError, json.JSONDecodeError):
             messages.append(f"保留 {session.name}：配置不可信或不完整。")
             continue
-        if _alive(pid):
+        if process_alive(pid):
             continue
         shutil.rmtree(session)
         messages.append(f"已清理失效会话 {session.name}。")

@@ -5,7 +5,7 @@ description: 为已有 e2e-flows/ 的项目按需启动临时、本机的 E2E �
 
 # E2E Flow Center
 
-②是四个 E2E Skill 的临时只读控制台和完整 Schema 校验器。它从自身携带的 Python 模板启动 `127.0.0.1` 看板；目标项目始终只是数据源，不会得到看板目录、依赖、配置文件或 YAML 副本。
+②是 E2E 套件的临时只读控制台和完整 Schema 校验器。它从自身携带的 Python 模板启动 `127.0.0.1` 看板；目标项目始终只是数据源，不会得到看板目录、依赖、配置文件或 YAML 副本。脚本在 Windows / macOS / Linux 上走同一套用户缓存 runtime；用 `python` 或 `python3` 调用均可。
 
 ## 套件角色与边界
 
@@ -26,15 +26,15 @@ description: 为已有 e2e-flows/ 的项目按需启动临时、本机的 E2E �
 
 1. 确认目标项目根目录；不要从工作区父目录猜测。
 2. 检查 `e2e-flows/`。目录不存在或没有流程时，不启动空看板来替代分析：移交①。
-3. 若用户的目标是生成/补齐 Playwright 测试，移交③；若是运行、重跑、截图、Trace 或失败诊断，移交④。④需要界面时可要求②先启动或复用当前项目的会话。
+3. 若用户的目标是生成/补齐 Playwright 测试，移交③；若是运行、重跑、截图、Trace 或失败诊断，移交④；若是完整链路，移交 `e2e`。④需要界面时可要求②先启动或复用当前项目的会话。
 4. 对已有流程运行完整校验。无效 YAML 不阻止只读看板启动，但必须在结果中明确数量和错误，且不得宣称流程可执行。
 
 ## 完整校验
 
-从 Skill 目录运行：
+从本 Skill 的 `scripts/` 运行（`python` 或 `python3` 均可；缺 PyYAML 时脚本会启用用户缓存 runtime，不写入目标项目）：
 
 ```bash
-python3 scripts/validate.py --project <target-project-root>
+python scripts/validate.py --project <target-project-root>
 ```
 
 校验器输出 JSON：每个 `e2e-flows/<id>.yaml` 的状态、面向字段的错误和汇总；只要存在错误便以非零状态退出。它检查版本、id/文件名、必填字段、步骤与 signal、相对路径、来源文件和状态/review 一致性。它不会验证业务语义是否正确，也不会启动测试。
@@ -44,7 +44,7 @@ python3 scripts/validate.py --project <target-project-root>
 ## 启动临时看板
 
 ```bash
-python3 scripts/start_dashboard.py --project <target-project-root>
+python scripts/start_dashboard.py --project <target-project-root>
 ```
 
 启动脚本会：清理该项目的失效会话、复制看板运行副本到系统临时目录、生成随机会话 token 和端口、绑定 `127.0.0.1`、通过受 token 保护的健康检查后输出 URL。URL 仅供当前本机浏览器打开；首次打开会将 token 换为 HttpOnly 会话 Cookie 并跳转到无 token 的地址。
@@ -62,12 +62,12 @@ python3 scripts/start_dashboard.py --project <target-project-root>
 ## 关闭与清理
 
 ```bash
-python3 scripts/stop_dashboard.py --session <system-temp>/e2e-flow-center-<session-id>
-python3 scripts/cleanup_stale_sessions.py --project <target-project-root>
+python scripts/stop_dashboard.py --session <system-temp>/e2e-flow-center-<session-id>
+python scripts/cleanup_stale_sessions.py --project <target-project-root>
 ```
 
-停止脚本只终止它记录的进程组，随后删除相应的系统临时会话目录。清理脚本只处理同一项目、已失效的会话。任何路径不匹配、PID 不属于会话或项目根不一致时，保留目录并报告，而不是冒险终止或删除。
+停止脚本只终止它记录的进程树（Unix 用进程组，Windows 用 `taskkill /T`），随后删除相应的系统临时会话目录。清理脚本只处理同一项目、已失效的会话。任何路径不匹配、PID 不属于会话或项目根不一致时，保留目录并报告，而不是冒险终止或删除。
 
 ## 汇报格式
 
-结束时报告：看板 URL（若已启动）、有效/无效流程数量、可执行流程数量（`active`）、有效/无效报告数量，以及下一步移交。若可执行流程是 0，要明确说明原因；缺少测试时移交③，而不要假装②已经运行了测试。
+结束时报告：看板 URL（若已启动）、有效/无效流程数量、可执行流程数量（`active`）、有效/无效报告数量，以及下一步移交。若可执行流程是 0，要明确说明原因；缺少测试时移交③，而不要假装②已经运行了测试。看板只读：确认草稿、生成测试和运行都回到对话，使用 `e2e` 或对应子 skill。

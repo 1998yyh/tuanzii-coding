@@ -18,7 +18,7 @@
 
 ## 测试落点
 
-- `test.spec` 是项目相对 E2E spec 路径：必须位于顶层 `e2e/`、`playwright/` 或 `test(s)/e2e/`、`test(s)/playwright/` 下，文件名必须为 `*.e2e.*` 或 `*.spec.*` 的 JavaScript/TypeScript 文件，并且从项目根到该文件不含符号链接。完整校验不通过时③不得写入。
+- `test.spec` 是项目相对 E2E spec 路径，规则以①的 `flow-schema.md` 为准：顶层 `e2e/`、`playwright/`、`test/`、`tests/`，或 `apps|packages|services/<包名>/…/e2e|playwright/`；文件名为 `*.e2e.*` 或 `*.spec.*`，路径不含符号链接。完整校验不通过时③不得写入。
 - `test.source: external` 表示①登记、待③创建；创建并确认 spec 存在后，③只可把它改为 `existing`。
 - `test.source: existing` 表示 spec 必须存在且先读后改。③不得改 `test.spec`、业务语义或 `review`。
 

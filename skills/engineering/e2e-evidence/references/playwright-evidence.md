@@ -26,7 +26,7 @@
 
 ## 视口保真校验
 
-运行结束后机械核对截图尺寸与配置 viewport 一致（macOS 用 `sips -g pixelWidth -g pixelHeight`，或 ImageMagick `identify`）。尺寸不符说明视口配置被覆盖，按上节排查；不要把桌面视口证据当作移动端流程的验收依据。
+运行结束后机械核对截图尺寸与配置 viewport 一致。用项目已有工具读取图片像素（Pillow、ImageMagick `identify`，或 macOS `sips`）；不要把桌面视口证据当作移动端流程的验收依据。尺寸不符说明视口配置被覆盖，按上节排查。
 
 ## 结果清单
 

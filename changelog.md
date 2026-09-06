@@ -2,7 +2,26 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
-## [4.4.1] - 2026-08-24
+## [4.5.0] - 2026-09-06
+
+### 新增
+
+- 新增 `e2e` 统一入口 skill：用户说「做 e2e / 把端到端测起来」时按意图分流到抽离、看板、测试生成或证据归档；完整链路默认走「少量 P0 draft → 对话确认 → 生成并实跑」快路径，避免第一次抽完整覆盖图。`ask-matt` 入口支线同步收录。
+- Playwright 测试落点放宽：除原有 `e2e/`、`playwright/`、`test(s)/e2e|playwright/` 外，接受 Playwright 默认的 `tests/*.spec.ts`，以及 `apps|packages|services/<包名>/…/e2e|playwright/`。`src/` 下的业务文件（含 `src/e2e/`、`apps/*/src/e2e/`）仍拒绝。
+
+### 变更
+
+- e2e-flow-center 脚本改为跨平台 runtime：`python` / `python3` 均可；缺 PyYAML 时校验器与看板共用用户缓存 venv（Windows 为 `%LOCALAPPDATA%\e2e-flow-center\runtime`，Unix 仍为 `~/.cache/e2e-flow-center/runtime`），不往目标项目装依赖。
+- 看板空态与草稿/就绪/激活详情改为指向 `/tuanzii:e2e` 对话下一步；确认、生成测试和运行仍在对话中完成，看板保持只读。
+- 四个子 skill 的移交表增加「完整链路走 e2e」；视口核对不再写死 macOS `sips`。
+
+### 修复
+
+- Windows 上看板启动失败：venv 解释器从硬编码的 `bin/python` 改为 `Scripts/python.exe`。
+- Windows 上无法停止看板：`stop_dashboard` / 失效会话清理改为 `taskkill /T` 与 Win32 进程探测，不再调用 `os.killpg`。
+- 完整校验器不再依赖调用方已经装好 PyYAML：与看板走同一套 runtime，`source-validated` 自动验收在干净机器上可真正跑通。
+- 看板项目名在 Windows 路径下被整段显示：按 `/` 与 `\` 分段取最后一段。
+
 
 ### 文档
 

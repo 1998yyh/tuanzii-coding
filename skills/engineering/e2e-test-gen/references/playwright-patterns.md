@@ -63,7 +63,7 @@ test("已注册用户登录后看到工作台", async ({ page }, testInfo) => {
 
 ## 测试落点同步
 
-只有 `test.spec` 通过完整路径校验（位于顶层 `e2e/`、`playwright/` 或 `test(s)/e2e/`、`test(s)/playwright/` 下，为 `*.e2e.*` 或 `*.spec.*`，且路径不含符号链接）后，③才可创建或修改它。创建后重新确认该项目相对文件存在，并只将对应 YAML 的 `test.source` 从 `external` 设为 `existing`。测试随后失败也不把已存在的文件重新标为待创建；流程状态仍保持 `ready`，直到单文件实跑全绿。
+只有 `test.spec` 通过完整 Schema 的 E2E spec 落点校验后，③才可创建或修改它。创建后重新确认该项目相对文件存在，并只将对应 YAML 的 `test.source` 从 `external` 设为 `existing`。测试随后失败也不把已存在的文件重新标为待创建；流程状态仍保持 `ready`，直到单文件实跑全绿。
 
 ## 失败处理
 

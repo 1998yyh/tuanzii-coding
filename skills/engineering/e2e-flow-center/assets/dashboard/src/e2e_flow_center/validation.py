@@ -15,6 +15,13 @@ FLOW_ID_RE = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 ENV_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 FIXTURE_KEY_RE = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 E2E_SPEC_RE = re.compile(r"^.+\.(?:e2e|spec)\.(?:[cm]?[jt]sx?)$")
+SAFE_SPEC_TOP_LEVEL = frozenset({"e2e", "playwright", "test", "tests"})
+SAFE_SPEC_WORKSPACE_ROOTS = frozenset({"apps", "packages", "services"})
+SAFE_SPEC_WORKSPACE_DIRS = frozenset({"e2e", "playwright"})
+SPEC_PATH_ERROR = (
+    "必须是 *.e2e.* 或 *.spec.* 的 JS/TS 文件，位于顶层 e2e/、playwright/、test/、tests/，"
+    "或 apps|packages|services/<包名>/…/e2e|playwright/ 下，且路径中不能有符号链接。"
+)
 FLOW_SCHEMA_VERSION = 2
 PRIORITIES = {"P0", "P1", "P2", "P3"}
 ACTIONS = {"navigate", "fill", "click", "select", "upload", "wait", "assert"}
@@ -85,21 +92,28 @@ def _contains_symlink(project_root: Path, path: Path) -> bool:
     return False
 
 
+def _workspace_e2e_spec(directories: tuple[str, ...]) -> bool:
+    """Allow apps/packages/services monorepo specs; reject anything under a src/ segment."""
+    if not directories or directories[0] not in SAFE_SPEC_WORKSPACE_ROOTS:
+        return False
+    for index, part in enumerate(directories):
+        if part in SAFE_SPEC_WORKSPACE_DIRS:
+            return "src" not in directories[:index]
+    return False
+
+
 def _safe_e2e_test_spec_path(project_root: Path, value: Any) -> bool:
     """Only permit clearly named E2E specs, never arbitrary project files."""
     if not is_relative_path(value):
         return False
     path = PurePosixPath(value)
+    if E2E_SPEC_RE.fullmatch(path.name) is None:
+        return False
     directories = path.parts[:-1]
-    top_level = directories[0] if directories else ""
-    in_safe_e2e_root = top_level in {"e2e", "playwright"} or (
-        top_level in {"test", "tests"} and any(part in {"e2e", "playwright"} for part in directories)
-    )
-    return (
-        E2E_SPEC_RE.fullmatch(path.name) is not None
-        and in_safe_e2e_root
-        and not _contains_symlink(project_root, project_root / path)
-    )
+    if not directories:
+        return False
+    allowed = directories[0] in SAFE_SPEC_TOP_LEVEL or _workspace_e2e_spec(directories)
+    return allowed and not _contains_symlink(project_root, project_root / path)
 
 
 def _validate_fixtures(document: dict[str, Any], issues: list[Issue]) -> dict[str, str]:
@@ -269,11 +283,7 @@ def validate_document(document: Any, project_root: Path, path: str) -> list[Issu
     if not isinstance(test, dict) or test.get("source") not in {"external", "existing"}:
         _issue(issues, "test.source", "必须为 external 或 existing。")
     elif not _safe_e2e_test_spec_path(project_root, test.get("spec")):
-        _issue(
-            issues,
-            "test.spec",
-            "必须位于顶层 e2e/playwright 或 test(s)/e2e/playwright 下、文件名为 *.e2e.* 或 *.spec.*，且路径中不能有符号链接。",
-        )
+        _issue(issues, "test.spec", SPEC_PATH_ERROR)
     elif test["source"] == "existing" and not (project_root / test["spec"]).is_file():
         _issue(issues, "test.spec", "标为 existing 的测试文件必须存在。")
     elif test["source"] == "existing":
