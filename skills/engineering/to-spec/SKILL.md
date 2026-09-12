@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 本 skill 基于当前对话上下文和对代码库的理解产出一份 spec。不要访谈用户 —— 只综合你已经掌握的信息。
 
-issue tracker 和 triage label 词汇表应该已经提供给你了 —— 如果没有，先运行 `tuanzii:setup-matt-pocock-skills`。
+issue tracker 和 triage label 词汇表应该已经提供给你了 —— 如果没有，提示用户运行 `/tuanzii:setup-matt-pocock-skills`。该 skill 仅限用户显式触发，不自动调用；已提供配置时直接继续。
 
 ## 流程
 

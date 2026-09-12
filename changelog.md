@@ -2,6 +2,33 @@
 
 本文件记录 tuanzii Claude Code 插件的重要变更。插件版本以 `.claude-plugin/plugin.json` 和 `.claude-plugin/marketplace.json` 为准。
 
+## [4.6.0] - 2026-09-12
+
+### 新增
+
+- 从 chokcoco/technical-image-generation-skill 迁入 `technical-image-generation`，登记于写作分组，支持 `/tuanzii:technical-image-generation`；保留 7 类图型模板、质量检查表和 8 张示例图。
+- 补充生图工具调用边界、无工具时的提示词交付方式和产物目录约定；原有 skill 用法不变。
+- 从 mattpocock/skills 提交 `3cca18b368ae95cdbdebbff572ccafa662551015` 迁入 5 个实验版 skill：`implement-spec`、`setup-ts-deep-modules`、`writing-fragments`、`writing-shape`、`writing-beats`。正文、描述与示例译为中文，保留上游仅限用户显式调用的设置及实验状态。
+- `implement-spec` 按任务依赖图调度独立 worktree，并串行合入汇总分支；适配项目 Git/PR 授权、失败工单阻塞和清理边界。
+- `setup-ts-deep-modules` 携带上游 dependency-cruiser 配置模板；保留脚本原样，中文流程明确 5 条实际检查规则、应用代码扫描范围、TypeScript 解析器兼容性与非空扫描覆盖，以及通过→违规失败→恢复通过的验收。
+- 写作三件套分别负责收集素材、逐段组织文章、按叙事节拍创作，保留每次写入前重读文件、保留用户编辑的规则。
+
+### 修复
+
+- `code-review`、`to-spec`、`to-tickets`、`triage`、`wayfinder` 缺配置时改为提示用户显式运行 setup，已配置的旧流程继续使用；`diagnosing-bugs` 将架构改进转交改为供用户选择的后续建议。
+- `wait-what` 按 `CONTEXT-MAP.md` 路由到正确词汇表；单 context 仓库用法不变。
+- `grill-me`、`grill-with-docs`、`triage`、`wayfinder` 明确实际加载依赖技能，多技能分别加载。
+
+### 变更
+
+- `grilling` 同轮问题之间增加水平分隔线；保留 `wayfinder` 的一次一问定制，其余入口仍按轮次推进。
+
+### 文档
+
+- 补充技术配图来源记录 `NOTICE.technical-image-generation.md`，记录上游提交和许可信息状态。
+- 同步插件清单、CLAUDE.md 与 `ask-matt` 路由，技能数 41 → 47（保留远端 E2E 入口，新增技术配图及 5 个 Matt 实验技能）；Matt 来源技能数 29 → 34，并在 NOTICE 区分原基线、选择性修复和实验迁入。
+- `retro` 仍为上游 STUB，本次不注册；`loop-me`、`claude-handoff` 暂缓迁入。保留现有中文本地定制，不机械同步英文标点清理。
+
 ## [4.5.0] - 2026-09-06
 
 ### 新增

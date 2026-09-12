@@ -22,7 +22,7 @@ Wayfinder 默认是 **规划**：每张 ticket 消解一个决定，当道路清
 
 地图是 **索引**，不是仓库。它列出已做的决定并指向持有细节的 ticket；一个决定只存在于一个地方 —— 它的 ticket —— 所以地图从不复述，只做一行摘要并链接。
 
-**地图、子 ticket、阻塞关系和 frontier 查询在物理上放在哪里是 tracker 相关的。** issue tracker 应该已经提供给你了 —— 如果没有，先运行 `tuanzii:setup-matt-pocock-skills`。查 tracker 文档的 "Wayfinding operations" 一节，了解 _本_ 仓库如何表达这些概念。如果没有提供 tracker，默认使用本地 markdown tracker。
+**地图、子 ticket、阻塞关系和 frontier 查询在物理上放在哪里是 tracker 相关的。** issue tracker 应该已经提供给你了 —— 如果没有，提示用户运行 `/tuanzii:setup-matt-pocock-skills`。该 skill 仅限用户显式触发，不自动调用；已提供配置时直接继续。查 tracker 文档的 "Wayfinding operations" 一节，了解 _本_ 仓库如何表达这些概念。如果没有提供 tracker，默认使用本地 markdown tracker。
 
 ### 地图正文
 
@@ -76,7 +76,7 @@ Wayfinder 默认是 **规划**：每张 ticket 消解一个决定，当道路清
 
 - **Research**（AFK）：阅读文档、第三方 API 或本地资源（如知识库），挖出一个决定所等待的事实。由 `tuanzii:research` **子 agent** 消解。当需要当前工作目录之外的知识时使用。
 - **Prototype**（HITL）：通过做一个便宜、粗糙、具体的可讨论 artifact 来提高讨论的真实度 —— 大纲、粗略初稿、stub，或通过 tuanzii:prototype skill 做的 UI/逻辑代码。把 prototype 作为资产链接上来。当关键问题是"它应该长什么样"或"它应该怎么表现"时使用。
-- **Grilling**（HITL）：对话。默认情形。总是调用 `tuanzii:grilling` 和 `tuanzii:domain-modeling` skill，提问节奏按 [一次一问](#一次一问)。
+- **Grilling**（HITL）：对话。默认情形。总是通过宿主的技能加载机制分别调用 `tuanzii:grilling` 和 `tuanzii:domain-modeling`，每个 skill 单独加载，提问节奏按 [一次一问](#一次一问)。
 - **Task**（HITL 或 AFK）：必须先完成、才能做出某个 _决定_ 的手工工作 —— 没什么可决定、可原型、可研究的，但讨论被它卡住。注册某个服务以便评估它的 API、开通访问权限、搬运数据以便看清它的形状。这是唯一 _做事_ 而非 _做决定_ 的类型 —— 它靠解锁一个决定赢得自己的位置，而不是靠交付终点。agent 能做就独自驱动（AFK）；否则给人类一份精确的清单（HITL）。工作完成即消解；答案记录做了什么以及后续 ticket 依赖的事实（凭据位置、新 URL、行数）。
 
 ## 一次一问

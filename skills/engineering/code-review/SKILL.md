@@ -10,7 +10,7 @@ description: 沿两条轴评审自某个固定点（commit、分支、tag 或 me
 
 两条轴以**并行 subagent** 方式运行，互不污染上下文，然后由本 skill 汇总两者的发现。
 
-issue tracker 应该已经提供给你了 —— 如果 `docs/agents/issue-tracker.md` 缺失，先运行 tuanzii:setup-matt-pocock-skills。
+issue tracker 应该已经提供给你了 —— 如果 `docs/agents/issue-tracker.md` 缺失，提示用户运行 `/tuanzii:setup-matt-pocock-skills`。该 skill 仅限用户显式触发，不自动调用；已提供配置时直接继续。
 
 ## 流程
 

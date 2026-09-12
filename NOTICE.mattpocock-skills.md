@@ -1,6 +1,10 @@
 # Attribution: mattpocock/skills
 
-本仓库以下 29 个 skill 衍生自 [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3（均已翻译为中文）：
+本仓库共 34 个 skill 衍生自 [mattpocock/skills](https://github.com/mattpocock/skills)（均已翻译为中文）。下面原有 29 个以 v1.2.3 为迁移基线；2026-09-12 选择性同步主分支修复，并从同一固定提交另迁入 5 个实验版 skill。没有将原有技能整体覆盖为上游最新版。
+
+本轮固定来源：[3cca18b368ae95cdbdebbff572ccafa662551015](https://github.com/mattpocock/skills/tree/3cca18b368ae95cdbdebbff572ccafa662551015)（2026-09-04）。
+
+## 原有技能（29 个）
 
 **`skills/grilling/`（追问与领域建模，4 个）**
 
@@ -45,6 +49,31 @@
 
 - `migrate-to-shoehorn/` —— 测试 `as` 断言迁移到 @total-typescript/shoehorn
 - `scaffold-exercises/` —— 课程练习目录脚手架
+
+## 实验版迁入（5 个，2026-09-12）
+
+均来自上游 `skills/in-progress/`，上游尚未纳入正式插件；本仓库保留实验状态与仅限用户显式调用的设置。
+
+| 本地路径 | 上游路径 | 用途 |
+|---|---|---|
+| `skills/engineering/implement-spec/` | `skills/in-progress/implement-spec/` | 按工单依赖并行实现整份 spec，汇总为一个 PR |
+| `skills/engineering/setup-ts-deep-modules/` | `skills/in-progress/setup-ts-deep-modules/` | TypeScript 包入口与模块边界检查 |
+| `skills/writing/writing-fragments/` | `skills/in-progress/writing-fragments/` | 采访并收集文章素材 |
+| `skills/writing/writing-shape/` | `skills/in-progress/writing-shape/` | 将素材逐段组织为文章 |
+| `skills/writing/writing-beats/` | `skills/in-progress/writing-beats/` | 按叙事节拍逐步写作 |
+
+翻译正文、描述、参数提示与文档示例；英文技能名和技术标识保留。`agents/openai.yaml` 及 `dependency-cruiser.config.cjs` 保持上游原样。`implement-spec` 适配本项目的 Git/PR 授权、串行汇总与失败处理规则；`setup-ts-deep-modules` 补齐实际配置的 5 条规则说明、应用扫描范围、解析器兼容性与非空扫描校验、现有文件保护。
+
+## 原有技能的选择性同步
+
+- 修复 5 个工程技能自动调用仅限用户触发的 setup 的说明；调试后的架构改进保留为用户可选建议。
+- `wait-what` 支持 `CONTEXT-MAP.md` 路由；多个追问入口明确分别加载依赖 skill；`grilling` 同轮问题增加分隔线。
+- 保留中文改写和 `wayfinder` 的一次一问定制。`domain-modeling` 现有触发条件已覆盖上游修订，不重复改写；英文 em-dash 清理不机械迁入。
+- `retro` 在上游仍标记为 STUB，`loop-me` 与 `claude-handoff` 本轮暂缓，三者均未迁入或注册。
+
+详细对比见 [2026-09-12 调研记录](docs/research/2026-09-12-matt-skills-upstream.md)。
+
+## 许可
 
 原项目以 MIT License 发布，原作者为 Matt Pocock。许可原文如下：
 

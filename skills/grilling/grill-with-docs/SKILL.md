@@ -4,4 +4,4 @@ description: 对计划或设计进行刨根问底的连环追问，并在追问�
 disable-model-invocation: true
 ---
 
-运行一次 `tuanzii:grilling` 会话，同时启用 `tuanzii:domain-modeling` skill。
+通过宿主的技能加载机制分别调用 `tuanzii:grilling` 与 `tuanzii:domain-modeling`，每个 skill 单独加载。按前者运行追问会话，按后者同步维护领域词汇与 ADR。

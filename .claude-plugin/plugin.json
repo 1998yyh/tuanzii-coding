@@ -1,7 +1,7 @@
 {
   "name": "tuanzii",
   "description": "tuanzii: Git 工具、工程流程、工程流水线与 E2E 流程管理、效率与写作辅助、追问与领域建模 skills",
-  "version": "4.5.0",
+  "version": "4.6.0",
   "author": {
     "name": "hao.yang"
   },
@@ -38,12 +38,18 @@
     "./skills/engineering/e2e-flow-center",
     "./skills/engineering/e2e-test-gen",
     "./skills/engineering/e2e-evidence",
+    "./skills/engineering/implement-spec",
+    "./skills/engineering/setup-ts-deep-modules",
     "./skills/productivity/handoff",
     "./skills/productivity/teach",
     "./skills/productivity/to-questionnaire",
     "./skills/productivity/wait-what",
     "./skills/productivity/writing-for-agents",
     "./skills/writing/humanizer-zh",
+    "./skills/writing/technical-image-generation",
+    "./skills/writing/writing-fragments",
+    "./skills/writing/writing-shape",
+    "./skills/writing/writing-beats",
     "./skills/misc/migrate-to-shoehorn",
     "./skills/misc/scaffold-exercises",
     "./skills/project/deepinit"

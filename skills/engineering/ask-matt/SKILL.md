@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 你记不住所有 skill，那就问。
 
+本 skill 负责向用户推荐入口。标记为仅限用户触发的 skill，由用户显式运行相应 `/tuanzii:<name>` 命令；路由建议本身不授权自动调用它们。
+
 一条**流程（flow）**是穿过若干 skill 的路径。大多数路径都跑在一条**主流程**上，另有两条**入口支线**汇入它。其余的 skill 要么独立使用，要么是运行在底层的词汇表。
 
 ## 主流程：想法 → 交付
@@ -39,7 +41,7 @@ disable-model-invocation: true
 
   分诊只适用于**不是你创建的** issue —— bug 报告、外部进来的需求、任何原始抵达的东西。tuanzii:to-tickets 产出的 ticket 已经是 agent-ready 的，**不要对它们做分诊**。
 
-- **有东西坏了** → **tuanzii:diagnosing-bugs**。专治硬骨头：第一眼看不穿的 bug、时有时无的 flake、在两个已知良好状态之间潜入的回归。在拿到**紧凑反馈回路**（一条已经能因*这个* bug 变红的命令）之前，它拒绝做任何理论推测；修复时附带回归测试。当事后复盘的真正结论是"没有好的 seam 可以锁住这个 bug"时，它会交接给 **tuanzii:improve-codebase-architecture**。
+- **有东西坏了** → **tuanzii:diagnosing-bugs**。专治硬骨头：第一眼看不穿的 bug、时有时无的 flake、在两个已知良好状态之间潜入的回归。在拿到**紧凑反馈回路**（一条已经能因*这个* bug 变红的命令）之前，它拒绝做任何理论推测；修复时附带回归测试。当事后复盘的真正结论是"没有好的 seam 可以锁住这个 bug"时，它会建议用户运行 **/tuanzii:improve-codebase-architecture**，不自动转交。
 
 - **要给产品补端到端测试** → **tuanzii:e2e**。统一入口：抽业务流程、确认后写 Playwright、跑证据、打开临时看板。不要让人在 extract / center / test-gen / evidence 四个子 skill 里挑。
 
@@ -86,6 +88,18 @@ disable-model-invocation: true
 - **tuanzii:wait-what** —— 针对"刚才那条消息没看懂"的纠正器。在任何其他 skill 的会话中途使用，agent 会用平实的语言、带上你缺的背景、`CONTEXT.md` 的词汇，把刚才说的东西重新讲一遍。它是事后补救；tuanzii:grill-with-docs 是事前预防，因为早早达成共同语言才能从源头挡住黑话。
 - **tuanzii:teach** —— 跨多个会话学习一个概念，把当前目录当作有状态的工作区。
 - **tuanzii:writing-for-agents** —— 编写面向 agent 的文档（skill、AGENTS.md、被引用的文档）时的参考。
+
+## 实验版入口
+
+下面 5 个 skill 来自上游 `in-progress/`，尚未纳入上游正式插件。本插件已翻译并登记，保留实验状态，全部由用户显式调用。
+
+- **`/tuanzii:implement-spec`**：已有完整 spec 与工单依赖图，希望多个 agent 在独立 worktree 并行实现，并汇总成一个 PR 时使用。它负责整份 spec 的调度；`implement` 负责一块工作。缺少 Git 写授权时使用普通临时副本与补丁集成，先交付本地实现。
+- **`/tuanzii:setup-ts-deep-modules`**：在 TypeScript 项目中把 `codebase-design` 的模块边界落实为 dependency-cruiser 检查。会添加开发依赖、配置与示例，并验证实际违规能被拦截。
+- **`/tuanzii:writing-fragments`**：还在找文章素材时，采访并持续收集片段，不急于定结构。
+- **`/tuanzii:writing-shape`**：已有素材堆，希望逐段组织论证、讨论表达形式时使用。输入素材保留，另写文章。
+- **`/tuanzii:writing-beats`**：已有素材堆，希望每次从候选叙事方向中选择一拍、写完再决定下一拍时使用。它与 `writing-shape` 是两种成文方式，不要求串行运行。
+
+`retro` 仍被上游标为 STUB，`loop-me` 与 `claude-handoff` 本轮暂缓；三者未在本插件注册。
 
 ## 前置条件
 

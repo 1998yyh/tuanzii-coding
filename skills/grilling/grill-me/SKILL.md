@@ -4,4 +4,4 @@ description: 对计划或设计进行刨根问底的连环追问，把思路打�
 disable-model-invocation: true
 ---
 
-运行一次 `tuanzii:grilling` 会话。
+通过宿主的技能加载机制调用 `tuanzii:grilling`，按其规则运行追问会话。

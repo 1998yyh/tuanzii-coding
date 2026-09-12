@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 把计划、spec 或对话拆成一组 **ticket** —— tracer-bullet 式的垂直切片，每张声明哪些 ticket **阻塞** 它。
 
-issue tracker 和 triage label 词汇表应该已经提供给你了 —— 如果没有，先运行 `tuanzii:setup-matt-pocock-skills`。
+issue tracker 和 triage label 词汇表应该已经提供给你了 —— 如果没有，提示用户运行 `/tuanzii:setup-matt-pocock-skills`。该 skill 仅限用户显式触发，不自动调用；已提供配置时直接继续。
 
 ## 流程
 

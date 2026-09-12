@@ -40,7 +40,7 @@ triage 期间发到 issue tracker 上的每条评论或 issue **必须** 以这�
 
 每个 triage 过的 issue 应恰好携带一个类别角色和一个状态角色。如果状态角色冲突，标记出来并在做任何事之前询问维护者。
 
-这些是规范角色名 —— issue tracker 里实际使用的标签字符串可能不同。映射关系应该已经提供给你了 —— 如果没有，先运行 `tuanzii:setup-matt-pocock-skills`。
+这些是规范角色名 —— issue tracker 里实际使用的标签字符串可能不同。映射关系应该已经提供给你了 —— 如果没有，提示用户运行 `/tuanzii:setup-matt-pocock-skills`。该 skill 仅限用户显式触发，不自动调用；已提供配置时直接继续。
 
 状态流转：未打标签的 issue 通常先进入 `needs-triage`；从那里流向 `needs-info`、`ready-for-agent`、`ready-for-human` 或 `wontfix`。报告者回复后，`needs-info` 回到 `needs-triage`。维护者随时可以推翻 —— 遇到看起来不寻常的流转，先标记并询问再继续。
 
@@ -73,7 +73,7 @@ PR 在范围内时，把外部 PR 也纳入这些桶，每行标注 `[PR]` 或 `
 
 3. **核实声明。** 在任何追问之前，先验证声明是否成立。对 bug，按报告者的步骤复现。对 PR，确认 diff 做到了它声称的事 —— checkout 出来，跑相关测试或命令。报告结果：已确认（附代码路径）、复现失败，或细节不足（强烈的 `needs-info` 信号）。一次确认的核实能让 agent 简报质量大幅提升。
 
-4. **追问（如需要）。** 如果请求还需要充实，一起运行 `tuanzii:grilling` 和 `tuanzii:domain-modeling` skill —— 一轮一轮地追问打磨，随着决策落地就地打磨领域术语并更新 `CONTEXT.md` / ADR。
+4. **追问（如需要）。** 如果请求还需要充实，通过宿主的技能加载机制分别调用 `tuanzii:grilling` 和 `tuanzii:domain-modeling`，每个 skill 单独加载 —— 一轮一轮地追问打磨，随着决策落地就地打磨领域术语并更新 `CONTEXT.md` / ADR。
 
 5. **落地结果：**
    - `ready-for-agent` —— 发一条 agent 简报评论（[AGENT-BRIEF.md](AGENT-BRIEF.md)）。

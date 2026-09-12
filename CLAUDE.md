@@ -19,7 +19,7 @@ claude plugin install tuanzii@tuanzii
 
 ```
 .claude-plugin/
-  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 41 个 skill 路径
+  plugin.json            # 插件清单（name: tuanzii），含 skills 数组显式列出全部 47 个 skill 路径
   marketplace.json       # 本地 marketplace 清单（新版 Claude Code 市场规范要求，含独立 metadata.version）
 skills/                  # Skills 目录，按用途分组子目录，每个 skill 一个文件夹，入口为 SKILL.md
   git/                   # Git 工具（7 个）
@@ -37,13 +37,15 @@ skills/                  # Skills 目录，按用途分组子目录，每个 ski
     grill-me/            # /grill-me 入口（user-invoked）
     grill-with-docs/     # /grill-with-docs 入口：追问 + 沉淀文档（user-invoked）
     domain-modeling/     # 领域建模：CONTEXT.md 词汇表与 ADR（含格式文档）
-  engineering/           # 工程流水线与 E2E 流程管理（20 个；其中 15 个衍生自 mattpocock/skills ※）
+  engineering/           # 工程流水线与 E2E 流程管理（22 个；其中 17 个衍生自 mattpocock/skills ※）
     ask-matt/            # skill 路由入口
     codebase-design/     # 深模块设计共享词汇库
     code-review/         # 双轴评审（规范 + spec）
     diagnosing-bugs/     # 疑难 bug 诊断循环（含 HITL 脚本模板）
     improve-codebase-architecture/  # 架构改进扫描 + HTML 报告
     implement/           # 按 spec/工单实现
+    implement-spec/      # 整份 spec 按依赖图并行实现（实验版）
+    setup-ts-deep-modules/ # TypeScript 模块边界检查配置（实验版）
     prototype/           # 一次性原型
     research/            # 一手资料调研落盘
     tdd/                 # 测试驱动开发（含 mocking/tests 文档）
@@ -64,8 +66,12 @@ skills/                  # Skills 目录，按用途分组子目录，每个 ski
     to-questionnaire/    # 决策 → 问卷
     wait-what/           # 重新表达未讲清的消息
     writing-for-agents/  # 写给 agent 的文档（含 SKILL-MECHANICS.md）
-  writing/
+  writing/               # 写作与技术配图（5 个）
     humanizer-zh/        # 去除文本 AI 写作痕迹（衍生自 op7418/Humanizer-zh，MIT，见 NOTICE.humanizer-zh.md）
+    writing-fragments/   # 采访并收集文章素材（Matt 实验版）
+    writing-shape/       # 将素材逐段组织为文章（Matt 实验版）
+    writing-beats/       # 按叙事节拍逐步创作（Matt 实验版）
+    technical-image-generation/ # 水彩墨线技术配图（chokcoco，见 NOTICE.technical-image-generation.md）
   misc/                  # 杂项（2 个，衍生自 mattpocock/skills ※）
     migrate-to-shoehorn/ # 测试 as 断言 → shoehorn
     scaffold-exercises/  # 课程练习目录脚手架
@@ -84,12 +90,13 @@ monitors/
   monitors.json          # 监控配置（当前为空数组）
 NOTICE.superpowers.md    # superpowers 衍生内容归属（MIT, Jesse Vincent）
 NOTICE.humanizer-zh.md   # humanizer-zh 衍生内容归属（MIT, 歸藏）
-NOTICE.mattpocock-skills.md  # mattpocock/skills 衍生内容归属（MIT, Matt Pocock，共 29 个 skill）
+NOTICE.mattpocock-skills.md  # mattpocock/skills 衍生内容归属（MIT, Matt Pocock，共 34 个 skill）
+NOTICE.technical-image-generation.md # 技术配图 skill 来源、上游版本与迁移说明
 changelog.md             # 插件版本变更日志（版本事实来源仍是两个清单，此处只做登记）
 package.json             # Node 依赖管理（commonjs，当前无运行时依赖）
 ```
 
-（※ = 衍生自 mattpocock/skills v1.2.3，全中文重写；mattpocock 系 skill 各含 `agents/openai.yaml` Codex 兼容文件，保持英文原样）
+（※ = 衍生自 mattpocock/skills，原 29 个以 v1.2.3 为基线并选择性同步修复，另从 `3cca18b` 迁入 5 个实验版；正文全中文，`agents/openai.yaml` Codex 兼容文件保持英文原样。详见 NOTICE。）
 
 仓库根级无构建系统、无 lint 工具，项目主体是纯脚手架。唯一例外：`skills/engineering/e2e-flow-center` 自带 FastAPI 看板应用（`assets/dashboard/pyproject.toml`，FastAPI + uvicorn + PyYAML，Python ≥3.11，src layout 靠测试内 `sys.path` 注入）和 unittest 契约测试（`tests/test_contracts.py`、`tests/test_runtime.py`）——改动该看板后必须跑测试，命令见「可执行验证命令」。
 
@@ -222,6 +229,8 @@ python skills/engineering/e2e-flow-center/tests/test_runtime.py
 | `diagnosing-bugs` | 疑难 bug / 性能回退的交互式诊断循环（含 HITL 脚本模板） |
 | `improve-codebase-architecture` | 扫描架构改进机会 → 可视化 HTML 报告 → 选一个追问打磨 |
 | `implement` | 按 spec 或工单集实现一块工作 |
+| `implement-spec` | 实验版：按工单依赖调度多个 agent 实现整份 spec，串行汇总为一个 PR；缺少 Git 写授权时交付本地补丁与验证 |
+| `setup-ts-deep-modules` | 实验版：安装并配置 dependency-cruiser，验证 TypeScript 包入口、测试私有和循环依赖规则 |
 | `prototype` | 一次性原型：验证状态模型/逻辑手感或探索 UI 形态 |
 | `research` | 查高信任一手资料，结论落盘为 Markdown（可派后台 agent） |
 | `tdd` | 测试驱动开发实践（red-green-refactor，含 mocking/tests 专题文档） |
@@ -232,7 +241,7 @@ python skills/engineering/e2e-flow-center/tests/test_runtime.py
 | `wizard` | 生成交互式 bash 向导，引导人完成只有人能做的步骤（配密钥/开基础设施） |
 | `setup-matt-pocock-skills` | 工程流水线一次性初始化：issue tracker、分诊标签、文档布局 |
 
-流水线主线：`to-spec` → `to-tickets` → `triage` → `wayfinder` → `implement`，各环节可用 `grilling` 系压力测试，`codebase-design` 提供共享设计语言。首次使用前跑一次 `setup-matt-pocock-skills`。
+流水线主线：`to-spec` → `to-tickets` → `triage` → `wayfinder` → `implement`，各环节可用 `grilling` 系压力测试，`codebase-design` 提供共享设计语言。首次使用前由用户显式运行一次 `/tuanzii:setup-matt-pocock-skills`；缺配置的技能只提示，不自动调用。已有完整 spec 与工单依赖图、需要并行实现时，可由用户显式选择实验版 `/tuanzii:implement-spec`。
 
 ### E2E 流程管理（skills/engineering/）
 
@@ -254,11 +263,19 @@ python skills/engineering/e2e-flow-center/tests/test_runtime.py
 | `wait-what` | 上一条消息没讲清时重新表达 |
 | `writing-for-agents` | 写给 agent 看的文档：创建/编辑 skill、AGENTS.md、CLAUDE.md 时用 |
 
-### 写作（skills/writing/，衍生自 op7418/Humanizer-zh，MIT，见 NOTICE.humanizer-zh.md）
+### 写作与技术配图（skills/writing/）
 
 | Skill | 功能 |
 |-------|------|
 | `humanizer-zh` | 去除文本 AI 写作痕迹：24 种模式检测（AI 词汇/三段式/破折号滥用/模糊归因等）+ 改写示例 + 50 分制质量评分 |
+| `writing-fragments` ※ | 实验版：采访并追加文章素材片段，暂不定结构 |
+| `writing-shape` ※ | 实验版：把素材整理为独立文章，逐段讨论与写入 |
+| `writing-beats` ※ | 实验版：每次选择并写入一个叙事节拍，再决定后续走向 |
+| `technical-image-generation` | 水彩墨线技术配图：7 类图型模板、质量检查表与示例图；实际生成依赖环境中的生图工具 |
+
+三个 `writing-*` 技能衍生自 Matt 的 `in-progress/`，仅限用户显式调用，保留实验状态；`writing-fragments` 产出的素材可交给 `writing-shape` 或 `writing-beats`，成文后按需使用 `humanizer-zh`。
+
+来源：`humanizer-zh` 衍生自 op7418/Humanizer-zh（MIT，见 NOTICE.humanizer-zh.md）；`technical-image-generation` 迁入自 chokcoco/technical-image-generation-skill（见 NOTICE.technical-image-generation.md）。
 
 ### 杂项（skills/misc/，衍生自 mattpocock/skills ※）
 
@@ -273,7 +290,7 @@ python skills/engineering/e2e-flow-center/tests/test_runtime.py
 |-------|------|
 | `deepinit` | 深度初始化 CLAUDE.md：替代内置 /init，覆盖架构分层/环境规范/三层边界/测试策略 |
 
-※ = 衍生自 [mattpocock/skills](https://github.com/mattpocock/skills) v1.2.3（MIT，见 NOTICE.mattpocock-skills.md），共 29 个，均已全中文重写；frontmatter `name` 保持英文与文件夹同名，`agents/openai.yaml` 与脚本文件保持原样。
+※ = 衍生自 [mattpocock/skills](https://github.com/mattpocock/skills)（MIT，见 NOTICE.mattpocock-skills.md），共 34 个。原有 29 个以 v1.2.3 为基线，本轮选择性同步修复；新增 5 个取自 `3cca18b368ae95cdbdebbff572ccafa662551015` 的实验目录。正文均已中文化，frontmatter `name` 保持英文与文件夹同名，`agents/openai.yaml` 与配置脚本保持原样。`retro` 仍为上游 STUB，`loop-me`、`claude-handoff` 本轮暂缓，未注册到插件。
 
 ## 输出风格（Output Styles）
 
@@ -289,5 +306,5 @@ python skills/engineering/e2e-flow-center/tests/test_runtime.py
 | `rem-engineer` | 蕾姆女仆工程师：温柔奉献 + 冷静果敢执行力 |
 
 ---
-**版本**: v1.14
-**最后更新**: 2026-09-06
+**版本**: v1.15
+**最后更新**: 2026-09-12
